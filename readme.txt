@@ -41,7 +41,7 @@ Features to be implemented in near future:
 * Support for adding image maps in posts.
 * Support for multiple image maps.
 
-=0.3=
+= 0.3 =
 * Fixed a bug which prevented inserting image map to the post with Insert media window in WordPress 3.5
 * Images of image maps in archive pages.
 * Click events: Possibility to choose if an area acts as a regular link, shows a tooltip when hovering or opens up a post content in a dialog.
