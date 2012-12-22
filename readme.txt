@@ -1,9 +1,9 @@
 === ImageMapper ===
 Contributors: spikefinned
-Tags: image map, images, interactive images
-Requires at least: 3.1
-Tested up to: 3.4.2
-Stable tag: 0.2
+Tags: image map, imagemap, images, interactive images
+Requires at least: 3.3.1
+Tested up to: 3.5
+Stable tag: 0.4
 License: GPLv2
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -21,11 +21,6 @@ As the plugin is still missing most of the labels and instructions to use, I'll 
 - To edit the content of the new area, click the area in the Areas list. It will redirect you to the editing form of the image map area.
 - Create a new post and open Insert/Upload media window. Select the image map tab and click the imagemap to insert it into the post.
 
-Features to be implemented in near future:
-- Possibility to choose if the image map area opens a pop up window with post content, displays a small tooltip when hovering or just acts like a regular link.
-- Choose the color and opacity of highlight of single area.
-- Redraw image map areas.
-
 == Installation ==
 
 1. Upload imagemapper folder to the `/wp-content/plugins/` directory
@@ -34,15 +29,20 @@ Features to be implemented in near future:
 
 == Changelog ==
 
-= 0.1 =
-* First release.
-
-= 0.2 =
-* Support for adding image maps in posts.
-* Support for multiple image maps.
+= 0.4 =
+* Added menu icons for Image maps and areas.
+* Different styles for area highlights including fill color with opacity and stroke with color, opacity and width.
+* Adding custom styles for highlights area also possible.
 
 = 0.3 =
 * Fixed a bug which prevented inserting image map to the post with Insert media window in WordPress 3.5
 * Images of image maps in archive pages.
 * Click events: Possibility to choose if an area acts as a regular link, shows a tooltip when hovering or opens up a post content in a dialog.
 * Prevent adding an empty area or area with only two points.
+
+= 0.2 =
+* Support for adding image maps in posts.
+* Support for multiple image maps.
+
+= 0.1 =
+* First release.

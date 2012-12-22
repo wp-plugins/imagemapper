@@ -13,6 +13,7 @@ define('IMAGEMAP_POST_TYPE', 'imagemap');
 define('IMAGEMAP_AREA_POST_TYPE', 'imagemap_area');
 add_action('init', 'imgmap_create_post_type');
 add_action('admin_menu', 'imgmap_custom_form');
+add_action('admin_menu', 'imgmap_imagemap_tab_menu'); 
 add_action('save_post', 'imgmap_save_meta');
 add_action('post_edit_form_tag', 'imgmap_add_post_enctype');
 add_action('template_include', 'imgmap_template');
@@ -21,6 +22,9 @@ add_action('wp_ajax_imgmap_delete_area', 'imgmap_delete_area_ajax');
 add_action('wp_ajax_nopriv_imgmap_load_dialog_post', 'imgmap_load_dialog_post_ajax');
 add_action('wp_ajax_imgmap_load_dialog_post', 'imgmap_load_dialog_post_ajax');
 add_action('wp_ajax_imgmap_get_area_coordinates', 'imgmap_get_area_coordinates_ajax');
+add_action('wp_ajax_imgmap_save_area_title', 'imgmap_save_area_title');
+add_action('wp_ajax_imgmap_set_area_color', 'imgmap_set_area_color');
+add_action('wp_ajax_imgmap_add_new_style', 'imgmap_add_new_style');
 add_action('before_delete_post', 'imgmap_permanently_delete_imagemap');
 add_action('wp_trash_post', 'imgmap_trash_imagemap');
 add_action('admin_head', 'imgmap_load_tiny_mce');
@@ -41,18 +45,22 @@ $image_maps = array();
 
 // Test data for highlight style management
 $imgmap_colors = array(
-'color1' => array('render_highlight' => array( 'fillColor' => 'c94a4a', 'strokeColor' => 'e82828', 'fillOpacity' => 0.3, 'strokeOpacity' => 0.8, 'strokeWidth' => 2)),
-'color2' => array('render_highlight' => array( 'fillColor' => '1e39db', 'strokeColor' => '1e39db', 'fillOpacity' => 0.3, 'strokeOpacity' => 0.8, 'strokeWidth' => 2)),
-'color3' => array('render_highlight' => array( 'fillColor' => '1ed4db', 'strokeColor' => '1ed4db', 'fillOpacity' => 0.3, 'strokeOpacity' => 0.8, 'strokeWidth' => 2)),
-'color4' => array('render_highlight' => array( 'fillColor' => '4355c3', 'strokeColor' => '1edb4b', 'fillOpacity' => 0.3, 'strokeOpacity' => 0.8, 'strokeWidth' => 2)),
-'color5' => array('render_highlight' => array( 'fillColor' => '3ddb1e', 'strokeColor' => '3ddb1e', 'fillOpacity' => 0.3, 'strokeOpacity' => 0.8, 'strokeWidth' => 2)),
-'color6' => array('render_highlight' => array( 'fillColor' => 'dbc71e', 'strokeColor' => 'dbc71e', 'fillOpacity' => 0.3, 'strokeOpacity' => 0.8, 'strokeWidth' => 2)),
-'color7' => array('render_highlight' => array( 'fillColor' => 'db4f1e', 'strokeColor' => 'db4f1e', 'fillOpacity' => 0.3, 'strokeOpacity' => 0.8, 'strokeWidth' => 2)),
-'color8' => array('render_highlight' => array( 'fillColor' => 'd91edb', 'strokeColor' => 'd91edb', 'fillOpacity' => 0.3, 'strokeOpacity' => 0.8, 'strokeWidth' => 2)),
-'color9' => array('render_highlight' => array( 'fillColor' => '1e34db', 'strokeColor' => '1e34db', 'fillOpacity' => 0.3, 'strokeOpacity' => 0.8, 'strokeWidth' => 2)),
-'color10' => array('render_highlight' => array( 'fillColor' => 'db1e65', 'strokeColor' => 'db1e65', 'fillOpacity' => 0.3, 'strokeOpacity' => 0.8, 'strokeWidth' => 2)),
-'color11' => array('render_highlight' => array( 'fillColor' => 'fefefe', 'strokeColor' => 'fefefe', 'fillOpacity' => 0.3, 'strokeOpacity' => 0.8, 'strokeWidth' => 2)),
-'color12' => array('render_highlight' => array( 'fillColor' => '070707', 'strokeColor' => '070707', 'fillOpacity' => 0.3, 'strokeOpacity' => 0.8, 'strokeWidth' => 2)),
+	'current_id' => 12,
+	'last_chosen' => 1,
+	'colors' => array(
+		1 => array( 'fillColor' => 'fefefe', 'strokeColor' => 'fefefe', 'fillOpacity' => 0.3, 'strokeOpacity' => 0.8, 'strokeWidth' => 2),
+		2 => array( 'fillColor' => '070707', 'strokeColor' => '070707', 'fillOpacity' => 0.3, 'strokeOpacity' => 0.8, 'strokeWidth' => 2),
+		3 => array( 'fillColor' => 'c94a4a', 'strokeColor' => 'e82828', 'fillOpacity' => 0.3, 'strokeOpacity' => 0.8, 'strokeWidth' => 2),
+		4 => array( 'fillColor' => '1e39db', 'strokeColor' => '1e39db', 'fillOpacity' => 0.3, 'strokeOpacity' => 0.8, 'strokeWidth' => 2),
+		5 => array( 'fillColor' => '1ed4db', 'strokeColor' => '1ed4db', 'fillOpacity' => 0.3, 'strokeOpacity' => 0.8, 'strokeWidth' => 2),
+		6 => array( 'fillColor' => '4355c3', 'strokeColor' => '1edb4b', 'fillOpacity' => 0.3, 'strokeOpacity' => 0.8, 'strokeWidth' => 2),
+		7 => array( 'fillColor' => '3ddb1e', 'strokeColor' => '3ddb1e', 'fillOpacity' => 0.3, 'strokeOpacity' => 0.8, 'strokeWidth' => 2),
+		8 => array( 'fillColor' => 'dbc71e', 'strokeColor' => 'dbc71e', 'fillOpacity' => 0.3, 'strokeOpacity' => 0.8, 'strokeWidth' => 2),
+		9 => array( 'fillColor' => 'db4f1e', 'strokeColor' => 'db4f1e', 'fillOpacity' => 0.3, 'strokeOpacity' => 0.8, 'strokeWidth' => 2),
+		10 => array( 'fillColor' => 'd91edb', 'strokeColor' => 'd91edb', 'fillOpacity' => 0.3, 'strokeOpacity' => 0.8, 'strokeWidth' => 2),
+		11 => array( 'fillColor' => '1e34db', 'strokeColor' => '1e34db', 'fillOpacity' => 0.3, 'strokeOpacity' => 0.8, 'strokeWidth' => 2),
+		12 => array( 'fillColor' => 'db1e65', 'strokeColor' => 'db1e65', 'fillOpacity' => 0.3, 'strokeOpacity' => 0.8, 'strokeWidth' => 2)
+		)
 );
 
 /* Creation of the custom post types 
@@ -62,19 +70,33 @@ $imgmap_colors = array(
  * Later there will be option for changing the stylesheet. 
  * */
 function imgmap_create_post_type() {
-	
+	if(!get_option('imgmap_colors')) {
+		global $imgmap_colors;	
+		add_option('imgmap_colors', $imgmap_colors);
+	}
 	/* Create the imagemap post type */
 	register_post_type(IMAGEMAP_POST_TYPE,
 		array( 
 			'labels' => array(
-					'name' => __('Image maps'),
-					'singular_name' => __('Image map')
-					),
-					'public' => true,
-					'has_archive' => true,
-					'supports' => array(
-						'title'
-					)
+				'name' => __('Image maps'),
+				'singular_name' => __('Image map'),
+				'add_new' => __('Add new Image map'),
+				'all_items' => __('All Image maps'),
+				'add_new_item' => __('Add new Image map'),
+				'edit_item' => __('Edit Image map'),
+				'new_item' => __('New Image map'),
+				'view_item' => __('View Image map'),
+				'search_items' => __('Search Image maps'),
+				'not_found' => __('Image map not found'),
+				'not_found_in_trash' => __('Image map not found in trash'),
+			),
+			'public' => true,
+			'menu_icon' => plugins_url() . '/imagemapper/imagemap_icon.png',
+			'exclude_from_search' => true,
+			'has_archive' => true,
+			'supports' => array(
+					'title'
+				)
 			)
 	);
 	
@@ -84,10 +106,20 @@ function imgmap_create_post_type() {
 		array( 
 			'labels' => array(
 				'name' => __('Image map areas'),
-				'singular_name' => __('Image map area')
+				'singular_name' => __('Image map area'),
+				'add_new' => __('Add new Image map area'),
+				'all_items' => __('All Image map areas'),
+				'add_new_item' => __('Add new Image map area'),
+				'edit_item' => __('Edit Image map area'),
+				'new_item' => __('New Image map area'),
+				'view_item' => __('View Image map area'),
+				'search_items' => __('Search Image map areas'),
+				'not_found' => __('Image map area not found'),
+				'not_found_in_trash' => __('Image map area not found in trash'),
 			),
 			'public' => true,
-			'has_archive' => true
+			'has_archive' => true,
+			'menu_icon' => plugins_url() . '/imagemapper/imagemap_area_icon.png',
 		)
 	);
 	
@@ -95,11 +127,10 @@ function imgmap_create_post_type() {
 	wp_register_script('imgmap_imagemapster', plugins_url() . '/imagemapper/script/jquery.imagemapster.min.js');
 	wp_register_style('jquery_ui', 'http://code.jquery.com/ui/1.9.2/themes/base/jquery-ui.css');
 	wp_register_style('imgmap_style', plugins_url().'/imagemapper/imgmap_style.css');
-	wp_register_script('jquery_ui', 'http://code.jquery.com/ui/1.9.2/jquery-ui.js');
-	
+
 	/* Enqueue jQuery UI, jQuery and ImageMapster + jQueryu UI Stylesheet */
 	wp_enqueue_style(array('jquery_ui', 'imgmap_style'));
-	wp_enqueue_script(array('jquery', 'jquery_ui', 'editor', 'editor_functions', 'imgmap_imagemapster'));
+	wp_enqueue_script(array('jquery', 'jquery-ui-core', 'jquery-ui-dialog', 'editor', 'editor_functions', 'imgmap_imagemapster'));
 	
 	/* The javascript file server needs to load for plugin's functionality depends on is the page is the admin panel or a frontend page */
 	/* (The frontend version obviously doesn't have for example the imagemap editor) */
@@ -204,16 +235,11 @@ function imgmap_save_meta($id = false) {
 		}
 	}
 	if(get_post_type($id) == IMAGEMAP_AREA_POST_TYPE) {
-		$area_vars = new StdClass();
+		$area_vars = json_decode(get_post_meta($id, 'imgmap_area_vars', true));
 		$area_vars->type = $_POST['area-type'];
 		$area_vars->tooltip_text = $_POST['area-tooltip-text'];
 		$area_vars->link_url = $_POST['area-link-url'];
 		$area_vars->link_target = $_POST['area-link-target'];
-		$area_vars->highlight_color = $_POST['area-highlight-color'];
-		$area_vars->highlight_opacity = $_POST['area-highlight-opacity'];
-		$area_vars->border_color = $_POST['area-border-color'];
-		$area_vars->border_opacity = $_POST['area-border-opacity'];
-		$area_vars->border_width = $_POST['area-border-width'];
 		
 		// Save area settings in JSON format.
 		// Basically when you need one of them, you need all others as well, so it's inefficient to save them in separate columns.
@@ -243,6 +269,10 @@ function imgmap_updated_message( $messages ) {
 	return $messages;
 }
 
+function imgmap_imagemap_tab_menu() {
+	add_submenu_page('edit.php?post_type='.IMAGEMAP_AREA_POST_TYPE, 'Imagemap area styles', 'Highlight styles', 'edit_posts', basename(__FILE__), 'imgmap_area_styles');
+}
+
 /* Add custom fields to the custom post type forms. 
  * */
 function imgmap_custom_form() {
@@ -254,7 +284,7 @@ function imgmap_custom_form() {
 	
 	remove_post_type_support(IMAGEMAP_AREA_POST_TYPE, 'editor');
 		
-	//add_meta_box('imagemap-area-settings', 'Highlight', 'imgmap_area_form_settings', IMAGEMAP_AREA_POST_TYPE, 'side');
+	add_meta_box('imagemap-area-settings', 'Highlight', 'imgmap_area_form_settings', IMAGEMAP_AREA_POST_TYPE, 'side');
 	add_meta_box('imagemap-area-types', 'Click event', 'imgmap_area_form_types', IMAGEMAP_AREA_POST_TYPE, 'normal');
 }
 
@@ -351,26 +381,70 @@ function imgmap_form_areas($post) {
 
 /* Settings for the single imagemap area */
 function imgmap_area_form_settings($post) {
-	global $imgmap_colors;
+	$imgmap_colors = get_option('imgmap_colors');
 	$meta = json_decode(get_post_meta($post->ID, 'imgmap_area_vars', true));
-	$meta->color = 'color1'; ?> 
-	<div id="imgmap-area-styles"><?php 
-	foreach($imgmap_colors as $key => $color) { ?>
-		<div class="imgmap-area-style <?php echo ($key === $meta->color ? 'chosen' : ''); ?>">
-			<div class="imgmap-area-color" style="
-			background-color: #<?php echo $color['render_highlight']['fillColor']; ?>;
-			opacity: <?php echo $color['render_highlight']['fillOpacity'];?>;
-			box-shadow: 0 0 0 <?php echo $color['render_highlight']['strokeWidth']; ?>px <?php echo imgmap_hex_to_rgba($color['render_highlight']['strokeColor'], $color['render_highlight']['strokeOpacity']); ?>"></div>
-	</div><?php }
+	?> 
+	<div id="imgmap-area-styles"><?php
+	foreach($imgmap_colors['colors'] as $key => $color) { 
+		echo imgmap_get_style_element($key, $color, $meta->color);
+	}
 	?><br style="clear:both;"></div>
-	
-	
-	<p><label>Highlight color<br /> #<input maxlength="6" type="text" name="area-highlight-color" id="highlight-color" value="<?php echo $meta->highlight_color ?>"></label></p>
-	<p><label>Higlight opacity<br /> <input type="number" max="1" min="0" step="0.1" name="area-highlight-opacity" value="<?php echo $meta->highlight_opacity ?>"></label></p>
-	<p><label>Stroke color<br /> #<input maxlength="6" type="text" name="area-border-color" id="highlight-border-color" value="<?php echo $meta->border_color ?>"></label></p>
-	<p><label>Stroke opacity<br /> <input type="number" max="1" min="0" step="0.1" name="area-border-opacity" value="<?php echo $meta->border_opacity ?>"></label></p>
-	<p><label>Stroke width<br /> <input type="number" min="0" step="1" name="area-border-width" value="<?php echo $meta->border_width ?>"></label></p>
-<?php
+	<a style="display: block; padding: 8px;" href="edit.php?post_type=imagemap_area&page=imagemapper.php">Add new</a><?php
+}
+
+function imgmap_get_style_element($key, $color, $chosen = false) { 
+	echo '
+	<div class="imgmap-area-style'.($key == $chosen ? ' chosen' : '').'" data-id="'.$key.'">
+		<div class="imgmap-area-color" style="
+		background-color: #'.$color['fillColor'].';
+		opacity: '.$color['fillOpacity'].';
+		box-shadow: 0 0 0 '.$color['strokeWidth'].'px '.imgmap_hex_to_rgba($color['strokeColor'], $color['strokeOpacity']).'"></div>
+	</div>';
+}
+
+function imgmap_area_styles() { ?>
+	<div class="wrap">
+	<h2>Imagemap highlight styles</h2>
+	<h3>Saved styles</h3>
+	<?php
+	$imgmap_styles = get_option('imgmap_colors');
+	?>
+		
+	<div id="imgmap-area-styles-edit"><?php 
+		foreach($imgmap_styles['colors'] as $key => $color) {
+			echo imgmap_get_style_element($key, $color, $meta->color); }
+		?>
+	</div><br style="clear:both;">
+	<div id="add-new-imgmap-style">
+		<div class="form-field">
+			<h3>Add new style</h3>
+			<label>Fill color <br />
+				#<input type="text" maxlength="6" id="imgmap-new-style-fillcolor" class="color-picker-field" />
+			</label>
+		</div>
+		<div class="form-field">
+			<label>Fill opacity <br />
+				<input type="number" min="0" max="1" step="0.1" id="imgmap-new-style-fillopacity" />
+			</label>
+		</div>
+		<div class="form-field">
+			<label>Stroke color <br />
+				#<input type="text" maxlength="6" id="imgmap-new-style-strokecolor" class="color-picker-field" />
+			</label>
+		</div>
+		<div class="form-field">
+			<label>Stroke opacity <br />
+				<input type="number" min="0" max="1" step="0.1" id="imgmap-new-style-strokeopacity" />
+			</label>
+		</div>
+		<div class="form-field">
+			<label>Stroke width <br />
+				<input type="number" min="0" step="1" id="imgmap-new-style-strokewidth" />
+			</label>
+		</div>
+		<p><input type="button" id="add-new-imgmap-style-button" class="button" value="Add new style"></p>
+	</div><pre>
+	<?php
 }
 
 function imgmap_area_form_types($post) { 
@@ -387,7 +461,17 @@ function imgmap_area_form_types($post) {
 	</div>
 	<div style="width: 75%; float: right;">
 		<div id="imagemap-area-popup-editor" class="area-type-editors <?php echo $meta->type == 'popup' ? 'area-type-editor-current' : '' ?>">
-		<?php wp_editor($post->post_content, 'content'); ?></div>
+		<?php 
+		if(function_exists('wp_editor')) {
+			wp_editor($post->post_content, 'content'); 
+		}
+		else if(function_exists('the_editor')) {
+			the_editor($post->post_content, 'content');
+		}
+		else {
+			echo 'Something went wrong when loading editor.';
+		}
+		?></div>
 		<div id="imagemap-area-tooltip-editor" class="area-type-editors <?php echo $meta->type == 'tooltip' ? 'area-type-editor-current' : '' ?>">
 			<p><label>Tooltip text <br />
 				<textarea cols="60" rows="8" name="area-tooltip-text"><?php echo $meta->tooltip_text ?></textarea>
@@ -406,7 +490,6 @@ function imgmap_area_form_types($post) {
  * However there's a bug with the redirecting and it's redirecting in wrong page. Might be that Wordpress doesn't allow the redirect. */
 function imgmap_save_area_ajax() {
 	global $wpdb;
-	
 	$area = new StdClass();
 	$area->coords = $_POST['coords'];
 	$area->text = '';
@@ -426,6 +509,10 @@ function imgmap_save_area_ajax() {
 	$area->id = $post;
 	$area->link = get_edit_post_link($area->id);
 	update_post_meta($area->id, 'coords', $area->coords);
+	$meta = new StdClass();
+	
+	$meta->color = $styles['last_chosen'];
+	update_post_meta($area->id, 'imgmap_area_vars', json_encode($meta));
 	$area->html = imgmap_create_list_element($area->id);
 	ob_clean();
 	echo json_encode($area);
@@ -440,16 +527,25 @@ function imgmap_delete_area_ajax() {
 
 /* Creates an area element to the HTML image map */
 function imgmap_create_area_element($id, $title) {	
+	$imgmap_colors = get_option('imgmap_colors');
 	$meta = json_decode(get_post_meta($id, 'imgmap_area_vars', true));
+	
+	if($meta === null)
+		$meta = new StdClass();
+	
+	if(!isset($imgmap_colors['colors'][$meta->color]))
+		$meta->color = $imgmap_colors['last_chosen'];
+		
+	$color = $imgmap_colors['colors'][$meta->color];
 	return '
 	<area
 	data-type="'.$meta->type.'"
 	data-tooltip="'.($meta->type == 'tooltip' ? $meta->tooltip_text : false ). '"
-	data-fill-color="'.$meta->highlight_color.'"
-	data-fill-opacity="'.$meta->highlight_opacity.'"
-	data-stroke-color="'.$meta->border_color.'"
-	data-stroke-opacity="'.$meta->border_opacity.'"
-	data-stroke-width="'.$meta->border_width.'"
+	data-fill-color="'.$color['fillColor'].'"
+	data-fill-opacity="'.$color['fillOpacity'].'"
+	data-stroke-color="'.$color['strokeColor'].'"
+	data-stroke-opacity="'.$color['strokeOpacity'].'"
+	data-stroke-width="'.$color['strokeWidth'].'"
 	data-mapkey="area-'.$id.'" 
 	shape="poly" coords="'.get_post_meta($id, 'coords', true).'" 
 	href="'. ($meta->type == 'link' ? $meta->link_url : '#') .'"
@@ -466,7 +562,7 @@ function imgmap_create_list_element($id) {
 	<div class="area-list-right">
 		<label>Title: <input type="text" id="'.$id.'-list-area-title" value="'.get_the_title($id).'" /><div style="clear: both"></div></label>
 		<div class="area-list-meta">
-			<a class="save-area-link" href="#">Save</a>
+			<a class="save-area-link" href="#" onclick="SaveTitle('.$id.')">Save</a>
 			<a class="edit-area-link" href="'.get_edit_post_link($id).'">Edit page</a>
 			<a class="delete-area" data-area="'.$id.'">Delete</a>
 		</div>
@@ -555,6 +651,48 @@ function imgmap_replace_shortcode($content) {
 		$content = preg_replace('/\[imagemap id=\"'.$map.'\"\]/', get_imgmap_frontend_image($map, $map.'-'.$imagemaps[$map]), $content, 1);
 	}
 	return $content;
+}
+
+function imgmap_save_area_title() {
+	if(current_user_can('manage_options')) {
+		$id = $_POST['id'];
+		$post = get_post($id);
+		$post->post_title = $_POST['title'];
+		echo wp_update_post($post);
+	}
+	die();
+}
+
+function imgmap_set_area_color() {
+	if(current_user_can('manage_options')) {
+		$id = $_POST['post'];
+		$color = $_POST['color'];
+		$meta = json_decode(get_post_meta($id, 'imgmap_area_vars', true));
+		echo json_encode($meta);
+		$meta->color = $color;
+		update_post_meta($id, 'imgmap_area_vars', json_encode($meta));
+	}
+	die();
+}
+
+function imgmap_add_new_style() {
+	if(current_user_can('manage_options')) {
+		$style = array(
+			'fillColor' => $_POST['fillColor'],
+			'fillOpacity' => $_POST['fillOpacity'],
+			'strokeColor' => $_POST['strokeColor'],
+			'strokeOpacity' => $_POST['strokeOpacity'],
+			'strokeWidth' => $_POST['strokeWidth']
+		);
+		$style_option = get_option('imgmap_colors');
+		$key = $style_option['current_id'] + 1;
+		$style_option['colors'][$key] = $style;
+		$style_option['current_id']++;
+		
+		update_option('imgmap_colors', $style_option);
+		echo imgmap_get_style_element($key, $style);
+	}
+	die();
 }
 
 function imgmap_hex_to_rgba($hex, $opacity = false) {

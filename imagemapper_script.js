@@ -21,7 +21,7 @@ jQuery(function($) {
 				}
 			});
 		});
-		console.log(areas.length);
+		// console.log(areas);
 		$(this).mapster({
 			clickNavigate: true,
 			showToolTip: true,
@@ -53,7 +53,7 @@ jQuery(function($) {
 
 function AreaClicked(data) {
 	var type = jQuery('area[data-mapKey='+data.key+']').attr('data-type'); 
-	console.log(type);
+	// console.log(type);
 	if(type == 'popup' || type == '' ) {
 		var dialog = jQuery(this).parent()[0].name.replace('imgmap', '#imgmap-dialog');
 		jQuery(dialog).dialog('option', 'title', jQuery('area[data-mapkey='+data.key+']').attr('title'));

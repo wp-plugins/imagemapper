@@ -9,25 +9,12 @@ var E = {
 	CoordCanvas: '#image-coord-canvas'
 	}
 
-jQuery(function() {
+jQuery(function($) {
 	
-	if(jQuery(E.Image).length > 0) {
-		jQuery(E.Image).load(function() { jQuery(this).show(200); });
-		jQuery(E.CoordCanvas).click(imgClick);
-		/* jQuery('img[usemap]').mapster({
-			fillColor: 'ffffff',
-			fillOpacity: 0.4,
-			stroke: true,
-			strokeColor: 'ffffff',
-			strokeOpacity: 0.6,
-			strokeWidth: 2,
-			listKey: 'data-listkey',
-			mapKey: 'data-mapkey',
-			listSelectedAttribute: 'checked',
-			boundList: jQuery('.area-list-element > input[type=checkbox], .area-list-element'),
-			onClick: AreaClicked
-		}); */
-		jQuery('#add-area-button').click(AddArea);
+	if($(E.Image).length > 0) {
+		$(E.Image).load(function() { $(this).show(200); });
+		$(E.CoordCanvas).click(imgClick);
+		$('#add-area-button').click(AddArea);
 		var img = new Image();
 		img.onload = function() {
 			Image = { width: this.width, height: this.height };
@@ -36,12 +23,12 @@ jQuery(function() {
 			SavedAreasCanvas.width = Image.width;
 			SavedAreasCanvas.height = Image.height;
 			
-			jQuery(Canvas).width(jQuery(E.Image).width());
-			jQuery(Canvas).height(jQuery(E.Image).height());
-			jQuery(SavedAreasCanvas).width(jQuery(E.Image).width());
-			jQuery(SavedAreasCanvas).height(jQuery(E.Image).height());
+			$(Canvas).width($(E.Image).width());
+			$(Canvas).height($(E.Image).height());
+			$(SavedAreasCanvas).width($(E.Image).width());
+			$(SavedAreasCanvas).height($(E.Image).height());
 		};
-		img.src = jQuery(E.Image).attr('src');
+		img.src = $(E.Image).attr('src');
 		
 		Canvas = document.getElementById('image-coord-canvas');
 		SavedAreasCanvas = document.getElementById('image-area-canvas');
@@ -49,46 +36,77 @@ jQuery(function() {
 			Ctx = Canvas.getContext('2d');
 			SACtx = SavedAreasCanvas.getContext('2d');
 			DrawSavedAreas(SavedAreasCanvas, SACtx);
-			jQuery('.area-list-element').change(function() { DrawSavedAreas(SavedAreasCanvas, SACtx); 3});
+			$('.area-list-element').change(function() { DrawSavedAreas(SavedAreasCanvas, SACtx); 3});
 		}
-		jQuery('.delete-area').click(DeleteArea);
+		$('.delete-area').click(DeleteArea);
 		
-		jQuery('#imagemap-image-container').attr('data-initpos', jQuery('#imagemap-image-container').offset().top);
-		jQuery(window).scroll(function() {
-			var element = jQuery('#imagemap-image-container');
-			var topPosition = jQuery(window).scrollTop() - element.attr('data-initpos') + 35;
+		$('#imagemap-image-container').attr('data-initpos', $('#imagemap-image-container').offset().top);
+		$(window).scroll(function() {
+			var element = $('#imagemap-image-container');
+			var topPosition = $(window).scrollTop() - element.attr('data-initpos') + 35;
 			var cssTop = parseInt(element.css('top'));
 			if(isNaN(cssTop)) { cssTop = 0; }
-			if(!((cssTop < topPosition) && (cssTop + element.height() > topPosition + jQuery(window).height()))) {
+			if(!((cssTop < topPosition) && (cssTop + element.height() > topPosition + $(window).height()))) {
 			// !(cssTop < topPosition) != 
-			// !(cssTop + element.height() > topPosition + jQuery(window).height())) {
+			// !(cssTop + element.height() > topPosition + $(window).height())) {
 				var val = 0;
-				if(cssTop + element.height() > topPosition + jQuery(window).height())
-					val = topPosition - element.height() + jQuery(window).height() - 50;
+				if(cssTop + element.height() > topPosition + $(window).height())
+					val = topPosition - element.height() + $(window).height() - 50;
 				else
 					val = topPosition;
 				
 				element.stop().animate({ top: 
-					Math.max(0, Math.min(val, jQuery('#poststuff').height() - element.height() - 114)) +'px' 
+					Math.max(0, Math.min(val, $('#poststuff').height() - element.height() - 114)) +'px' 
 				}, 400);
 			}
 		});
 		
-		
 	}
-	jQuery('.insert-media-imagemap').click(insertImageMap);
+	$('.insert-media-imagemap').click(insertImageMap);
 	
-	jQuery('.imgmap-color-picker').each(function() {
-		jQuery(this).farbtastic({
+	$('.imgmap-color-picker').each(function() {
+		$(this).farbtastic({
 			callback: function(color) {
-				console.log(color);
+				// console.log(color);
 			},
 			width: 100,
 			height: 100
 		});
 	});
 	
+	$('.imgmap-area-style').click(function() {
+		SetColor($(this).attr('data-id'));
+		$('.imgmap-area-style').removeClass('chosen');
+		$(this).addClass('chosen');
+	});
+	
+	$('#add-new-imgmap-style-button').click(AddNewStyle);
+	
+	
+	function AddNewStyle() {
+		// console.log();
+		// console.log($('#imgmap-new-style-fillopacity').val());
+		// console.log($('#imgmap-new-style-strokecolor').val());
+		// console.log($('#imgmap-new-style-strokeopacity').val());
+		// console.log($('#imgmap-new-style-strokewidth').val());
+		
+		
+		jQuery.post(ajaxurl, { 
+			action: 'imgmap_add_new_style',
+			fillColor: $('#imgmap-new-style-fillcolor').val(),
+			fillOpacity: $('#imgmap-new-style-fillopacity').val(),
+			strokeColor: $('#imgmap-new-style-strokecolor').val(),
+			strokeOpacity: $('#imgmap-new-style-strokeopacity').val(),
+			strokeWidth: $('#imgmap-new-style-strokewidth').val()
+			}, function(response) {
+				alert('Style added');
+				$('#imgmap-area-styles-edit').append(response);
+		});
+	}
+
+	
 });
+
 
 function insertImageMap() {
 	var img = jQuery(this).attr('data-imagemap');
@@ -97,7 +115,7 @@ function insertImageMap() {
 }
 
 function AreaClicked(data) {
-	console.log(data);
+	// console.log(data);
 }
 
 function FileAPIAvailable() {
@@ -105,7 +123,7 @@ function FileAPIAvailable() {
 }
 
 function ShowTypes(typeToShow) {
-	console.log('input[value="'+typeToShow+'"][name="area-type"]');
+	// console.log('input[value="'+typeToShow+'"][name="area-type"]');
 	jQuery('input[value="'+typeToShow+'"][name="area-type"]').attr('checked', true);
 	jQuery('.area-type-editors, .area-type-instructions').hide();
 	jQuery('#imagemap-area-'+typeToShow+'-editor').show(200);
@@ -162,7 +180,7 @@ function AddArea() {
 		parent_post: jQuery('#post_ID').val(),
 		coords: coordinates_to_send.join(',')
 	}, function(response) {
-		console.log(response);
+		// console.log(response);
 		response = JSON.parse(response);
 		jQuery('#imagemap-areas > div > ul').prepend(response.html);
 		jQuery('.area-list-element').change(function() { DrawSavedAreas(SavedAreasCanvas, SACtx); });
@@ -216,4 +234,27 @@ function DrawSavedAreas(canvas, ctx) {
 			}
 		}
 	});
+}
+
+function SaveTitle(id) {
+	
+	jQuery.post(ajaxurl, { 
+		action: 'imgmap_save_area_title',
+		id: id,
+		title: jQuery('#'+id+'-list-area-title').val() 
+		}, function(response) {
+			// console.log(response);
+		});
+}
+
+function SetColor(id) {
+	jQuery.post(ajaxurl, { 
+		action: 'imgmap_set_area_color',
+		color: id,
+		post: jQuery('#post_ID').val(),
+		title: jQuery('#'+id+'-list-area-title').val() 
+		}, function(response) {
+			// console.log(response);
+		});
+	
 }

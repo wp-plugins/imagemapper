@@ -100,16 +100,23 @@
   max-height: 100px;
   border: 1px solid #b4b4b4; }
 
-#imgmap-area-styles .imgmap-area-style {
-  background-image: url(transparency.png);
-  border: 1px solid #dedede;
-  overflow: hidden;
-  padding: 8px;
-  float: left;
-  margin: 4px;
-  cursor: pointer; }
-  #imgmap-area-styles .imgmap-area-style .imgmap-area-color {
-    width: 16px;
-    height: 16px; }
-#imgmap-area-styles .imgmap-area-style.chosen {
-  border: 1px solid rgba(200, 50, 70, 0.8); }
+#imgmap-area-styles, #imgmap-area-styles-edit {
+  max-width: 340px; }
+  #imgmap-area-styles .imgmap-area-style, #imgmap-area-styles-edit .imgmap-area-style {
+    background-image: url(transparency.png);
+    border: 1px solid #dedede;
+    overflow: hidden;
+    padding: 8px;
+    float: left;
+    margin: 4px;
+    cursor: pointer; }
+    #imgmap-area-styles .imgmap-area-style .imgmap-area-color, #imgmap-area-styles-edit .imgmap-area-style .imgmap-area-color {
+      width: 16px;
+      height: 16px; }
+  #imgmap-area-styles .imgmap-area-style.chosen, #imgmap-area-styles-edit .imgmap-area-style.chosen {
+    border: 1px solid rgba(200, 50, 70, 0.8); }
+
+#add-new-imgmap-style {
+  max-width: 200px; }
+  #add-new-imgmap-style .form-field {
+    margin-top: 10px; }
