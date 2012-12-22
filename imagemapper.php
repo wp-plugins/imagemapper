@@ -3,7 +3,7 @@
 Plugin Name: ImageMapper
 Plugin URI: https://github.com/SpaikFi/ImageMapper
 Description: Create interactive and visual image maps with a visual editor! Based on the ImageMapster jQuery plugin.
-Version: 0.3
+Version: 0.4
 Author: A.Sandberg AKA Spike
 Author URI: http://spike.viuhka.fi
 License: GPL2
