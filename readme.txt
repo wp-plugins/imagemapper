@@ -3,7 +3,7 @@ Contributors: spikefinned
 Tags: image map, imagemap, images, interactive images
 Requires at least: 3.3.1
 Tested up to: 3.5
-Stable tag: 0.4
+Stable tag: 0.5
 License: GPLv2
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -13,7 +13,7 @@ Create interactive and visual image maps with a visual editor. Based on the Imag
 
 Create interactive and visual image maps with a visual editor! Based on the ImageMapster jQuery plugin.
 
-As the plugin is still missing most of the labels and instructions to use, I'll include here a short description of how to use it.
+Instructions:
 - Create new Image map, select an image to upload and update post
 - The image should be displayed in the post form after refreshing.
 - To add new areas to the image, start creating the path simply by clicking the image. When the path looks good press Add area.
@@ -28,6 +28,13 @@ As the plugin is still missing most of the labels and instructions to use, I'll 
 3. Optional: Create single_imgmap.php template file in your theme directory and place `<?php do_action('imgmapper_frontend_image', $post_id); ?>` in it.
 
 == Changelog ==
+
+= 0.5 = 
+* Fixed bug where a highlight's fill opacity affected to the stroke opacity in style preview. 
+* Added color picker support for highlight fill color and stroke color fields. (Using the Iris color picker introduced in WP 3.5)
+* Changed popup dialog layout to match tooltip layout.
+* HTML title attribute can now be edited separately from the post title. (The attribute shows as a small tooltip when hovering over an area and might be distracting if there's already a tooltip.)
+* Highlight styles can now be edited and deleted.
 
 = 0.4 =
 * Added menu icons for Image maps and areas.

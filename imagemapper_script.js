@@ -27,6 +27,7 @@ jQuery(function($) {
 			showToolTip: true,
 			toolTipContainer: $('<div class="imagemapper-tooltip"></div>'),
 			toolTipClose: ['area-click', 'tooltip-click'],
+			mouseoutDelay: 800,
 			mapKey: 'data-mapkey',
 			onClick: AreaClicked,
 			singleSelect: true,
@@ -35,13 +36,15 @@ jQuery(function($) {
 			},
 			areas: areas
 		});
+			
 	});
 	
-	$('.imgmap-dialog').dialog({ 
+	$('.imgmap-dialog-wrapper').dialog({ 
 		autoOpen: false, 
 		zIndex: 10000,
-		width: 800,
-		height: 600,
+		width: 700,
+		show: 300,
+		dialogClass: 'imgmap-dialog',
 		position: {
 			of: $(parent)
 			}

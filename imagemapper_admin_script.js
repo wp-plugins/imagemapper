@@ -4,6 +4,7 @@ var Image;
 var Canvas, Ctx;
 var SavedAreasCanvas, SACtx;
 var Coords = [];
+var ShiftPressedDown = false;
 var E = { 
 	Image: '#imagemap-image',
 	CoordCanvas: '#image-coord-canvas'
@@ -13,7 +14,12 @@ jQuery(function($) {
 	
 	if($(E.Image).length > 0) {
 		$(E.Image).load(function() { $(this).show(200); });
-		$(E.CoordCanvas).click(imgClick);
+		$(E.CoordCanvas).mousedown(imgClick);
+		$(window).
+		keydown(function(evt) { if(evt.which == 16) { ShiftPressedDown = true; } }).
+		keyup(function(evt) { if(evt.which == 16) { ShiftPressedDown = false; } });
+			
+		
 		$('#add-area-button').click(AddArea);
 		var img = new Image();
 		img.onload = function() {
@@ -74,22 +80,27 @@ jQuery(function($) {
 		});
 	});
 	
-	$('.imgmap-area-style').click(function() {
+	$('#imgmap-area-styles .imgmap-area-style').click(ChooseStyleToUse);
+	$('#imgmap-area-styles-edit .imgmap-area-style').click(ChooseStyleToEdit);
+	
+	$('#add-new-imgmap-style-button').click(AddNewStyle);
+	$('#edit-imgmap-style-button').click(EditStyle);
+	$('#delete-imgmap-style-button').click(DeleteStyle);
+	
+	function ChooseStyleToUse() {
 		SetColor($(this).attr('data-id'));
 		$('.imgmap-area-style').removeClass('chosen');
 		$(this).addClass('chosen');
-	});
+	}
 	
-	$('#add-new-imgmap-style-button').click(AddNewStyle);
-	
+	function ChooseStyleToEdit() {
+		InitStyleEdit(this);
+		$('#delete-imgmap-style-button, #edit-imgmap-style-button').attr('disabled', false);
+		$('.imgmap-area-style').removeClass('chosen');
+		$(this).addClass('chosen');
+	}
 	
 	function AddNewStyle() {
-		// console.log();
-		// console.log($('#imgmap-new-style-fillopacity').val());
-		// console.log($('#imgmap-new-style-strokecolor').val());
-		// console.log($('#imgmap-new-style-strokeopacity').val());
-		// console.log($('#imgmap-new-style-strokewidth').val());
-		
 		
 		jQuery.post(ajaxurl, { 
 			action: 'imgmap_add_new_style',
@@ -99,12 +110,50 @@ jQuery(function($) {
 			strokeOpacity: $('#imgmap-new-style-strokeopacity').val(),
 			strokeWidth: $('#imgmap-new-style-strokewidth').val()
 			}, function(response) {
-				alert('Style added');
+				$('.imgmap-area-style').removeClass('chosen');
 				$('#imgmap-area-styles-edit').append(response);
+				$('.imgmap-area-style').click(ChooseStyleToEdit);
+				alert('Style added');
 		});
 	}
 
-	
+	function EditStyle(id) {
+		var id = jQuery(jQuery('.imgmap-area-style.chosen').get()).attr('data-id');
+		
+		jQuery.post(ajaxurl, { 
+			action: 'imgmap_edit_style',
+			id: id,
+			fillColor: $('#imgmap-new-style-fillcolor').val(),
+			fillOpacity: $('#imgmap-new-style-fillopacity').val(),
+			strokeColor: $('#imgmap-new-style-strokecolor').val(),
+			strokeOpacity: $('#imgmap-new-style-strokeopacity').val(),
+			strokeWidth: $('#imgmap-new-style-strokewidth').val()
+			}, function(response) {
+				$('.imgmap-area-style.chosen').replaceWith(response);
+				$('.imgmap-area-style').click(ChooseStyleToEdit);
+				alert('Changes saved');
+		});
+	}
+
+	function DeleteStyle(id) {
+		if(!confirm('Are you sure you want to delete this style? All highlights currently using it will be changed to use a white default style'))
+			return;
+			
+		var id = jQuery(jQuery('.imgmap-area-style.chosen').get()).attr('data-id');
+		
+		jQuery.post(ajaxurl, { 
+			action: 'imgmap_delete_style',
+			id: id
+			}, function(response) {
+			$('#imgmap-area-styles-edit').append(response);
+				jQuery('.imgmap-area-style.chosen').hide(200, function() { 
+					jQuery(this).remove();				
+					$('#delete-imgmap-style-button, #edit-imgmap-style-button').attr('disabled', true);
+				});
+		});
+	}
+	if($().wpColorPicker)
+		$('.color-picker-field').wpColorPicker();
 });
 
 
@@ -130,8 +179,16 @@ function ShowTypes(typeToShow) {
 }
 
 function imgClick(evt) {
-	var offset = jQuery(this).offset();
-	AddCoords(evt.pageX - offset.left, evt.pageY - offset.top);	
+	switch(evt.which) {
+		case 1: 
+			if(ShiftPressedDown) {
+				CoordsBack();
+			} else {
+				var offset = jQuery(this).offset();
+				AddCoords(evt.pageX - offset.left, evt.pageY - offset.top);	
+			}
+		break;
+	}
 }
 var coordinate_index = 0;
 function AddCoords(x, y) {
@@ -148,6 +205,27 @@ function AddCoords(x, y) {
 	
 	jQuery('#coords').text(Coords.join(','));
 	
+	Ctx.clearRect(0, 0, Canvas.width, Canvas.height);
+	Ctx.beginPath();
+	
+	Ctx.moveTo(Coords[0].x, Coords[0].y);
+	for(var i = 1; i < Coords.length; i++) {
+		Ctx.lineTo(Coords[i].x, Coords[i].y);
+	}
+	Ctx.lineWidth = 3;
+	Ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+	Ctx.strokeStyle = 'rgba(30, 30, 30, 0.6)';
+	Ctx.closePath();
+	Ctx.stroke();
+	Ctx.fill();
+	
+}
+
+function CoordsBack() {
+	if(Coords.length == 0)
+		return; 
+		
+	Coords.pop();
 	Ctx.clearRect(0, 0, Canvas.width, Canvas.height);
 	Ctx.beginPath();
 	
@@ -256,5 +334,22 @@ function SetColor(id) {
 		}, function(response) {
 			// console.log(response);
 		});
+}
+
+function InitStyleEdit(dom) {
 	
+	if(jQuery().wpColorPicker) 
+		jQuery('#imgmap-new-style-fillcolor').iris('option', 'color', '#' + jQuery(dom).attr('data-fill-color').replace('#', ''));
+	else	
+		jQuery('#imgmap-new-style-fillcolor').val(jQuery(dom).attr('data-fill-color').replace('#', ''));
+	
+	if(jQuery().wpColorPicker)
+		jQuery('#imgmap-new-style-strokecolor').iris('option', 'color', '#' + jQuery(dom).attr('data-stroke-color').replace('#', ''));
+	else
+		jQuery('#imgmap-new-style-strokecolor').val(jQuery(dom).attr('data-stroke-color').replace('#', ''));
+	
+	
+	jQuery('#imgmap-new-style-fillopacity').val(jQuery(dom).attr('data-fill-opacity'));
+	jQuery('#imgmap-new-style-strokeopacity').val(jQuery(dom).attr('data-stroke-opacity'));
+	jQuery('#imgmap-new-style-strokewidth').val(jQuery(dom).attr('data-stroke-width'));
 }

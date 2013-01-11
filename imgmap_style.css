@@ -42,6 +42,10 @@
 
 .area-type-editors {
   display: none; }
+  .area-type-editors textarea {
+    width: 100%; }
+  .area-type-editors iframe {
+    background-color: white !important; }
 
 .area-type-editor-current {
   display: block; }
@@ -83,8 +87,8 @@
   position: absolute;
   background-color: #fff;
   padding: 8px;
-  border: 4px solid rgba(10, 10, 10, 0.4);
-  border-radius: 6px;
+  border: 2px solid rgba(10, 10, 10, 0.4);
+  box-shadow: 4px 4px 1px rgba(0, 0, 0, 0.3);
   -moz-background-clip: padding;
   /* Firefox 3.6 */
   -webkit-background-clip: padding;
@@ -101,7 +105,7 @@
   border: 1px solid #b4b4b4; }
 
 #imgmap-area-styles, #imgmap-area-styles-edit {
-  max-width: 340px; }
+  max-width: 95%; }
   #imgmap-area-styles .imgmap-area-style, #imgmap-area-styles-edit .imgmap-area-style {
     background-image: url(transparency.png);
     border: 1px solid #dedede;
@@ -114,9 +118,42 @@
       width: 16px;
       height: 16px; }
   #imgmap-area-styles .imgmap-area-style.chosen, #imgmap-area-styles-edit .imgmap-area-style.chosen {
-    border: 1px solid rgba(200, 50, 70, 0.8); }
+    box-shadow: 0 0 0 2px #555; }
 
-#add-new-imgmap-style {
-  max-width: 200px; }
-  #add-new-imgmap-style .form-field {
-    margin-top: 10px; }
+.divide-left, .divide-right {
+  width: 50%;
+  min-width: 400px;
+  float: left; }
+
+#add-new-imgmap-style td {
+  text-align: center;
+  vertical-align: top; }
+#add-new-imgmap-style th {
+  padding-top: 20px;
+  padding-left: 20px;
+  padding-right: 20px; }
+#add-new-imgmap-style input[type="number"] {
+  width: 50px; }
+
+.imgmap-dialog {
+  background-color: #fff;
+  border: 2px solid rgba(50, 50, 50, 0.4);
+  display: none;
+  -moz-background-clip: padding;
+  /* Firefox 3.6 */
+  -webkit-background-clip: padding;
+  /* Safari 4? Chrome 6? */
+  background-clip: padding-box;
+  /* Firefox 4, Safari 5, Opera 10, IE 9 */ }
+  .imgmap-dialog .ui-dialog-titlebar {
+    background-color: #323232;
+    color: white;
+    padding: 5px;
+    padding-left: 10px; }
+    .imgmap-dialog .ui-dialog-titlebar .ui-dialog-titlebar-close {
+      float: right; }
+  .imgmap-dialog .imgmap-dialog-wrapper {
+    padding: 7px;
+    min-height: 100px;
+    max-height: 800px;
+    overflow: auto; }
