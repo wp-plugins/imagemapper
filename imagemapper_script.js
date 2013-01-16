@@ -51,21 +51,64 @@ jQuery(function($) {
 		});
 	$('.mapster_el').load(function() {
 	});
+	
+	$('.alternative-links-imagemap').
+	click(AlternativeLinkClicked).
+	mouseenter(function () {
+		var mapster = $($(this).attr('data-parent').replace('imgmap', '#imagemap')).get(0);
+		jQuery(mapster).mapster('highlight', false);
+		jQuery(mapster).mapster('highlight', $(this).attr('data-key'));
+	}).
+	mouseleave(function () {
+		var mapster = $($(this).attr('data-parent').replace('imgmap', '#imagemap')).get(0);
+		jQuery(mapster).mapster('highlight', false);
+	});
+	
+	$('.altlinks-toggle').click(function() {
+		$('#altlinks-container-' + $(this).attr('data-parent')).toggle(200);
+	});
+	
 });
 
+
+
+function AlternativeLinkClicked() {
+	var key = jQuery(this).attr('data-key');
+	var type = jQuery(this).attr('data-type');
+	var parent = jQuery(this).attr('data-parent');
+	AlternativeLinkAction(key, type, parent);
+}
+
+function AlternativeLinkAction(areaKey, areaType, imgmap) {
+	switch(areaType) {
+		case 'popup': 
+			OpenImgmapDialog(areaKey, jQuery('map[name="' + imgmap + '"]').get(0));
+		break;
+		
+		case 'tooltip':
+			imgmap = imgmap.replace('imgmap', '#imagemap');
+			jQuery(imgmap).mapster('tooltip', areaKey);
+		break;
+	}
+}
 
 function AreaClicked(data) {
 	var type = jQuery('area[data-mapKey='+data.key+']').attr('data-type'); 
 	// console.log(type);
 	if(type == 'popup' || type == '' ) {
-		var dialog = jQuery(this).parent()[0].name.replace('imgmap', '#imgmap-dialog');
-		jQuery(dialog).dialog('option', 'title', jQuery('area[data-mapkey='+data.key+']').attr('title'));
+		OpenImgmapDialog(data.key, jQuery(this).parent()[0]);
+	}
+}
+
+function OpenImgmapDialog(key, parent) {
+	console.log(key + ', ' + parent);
+	var dialog = parent.name.replace('imgmap', '#imgmap-dialog');
+		jQuery(dialog).dialog('option', 'title', jQuery('area[data-mapkey='+key+']').attr('title'));
 		jQuery.post(imgmap.ajaxurl, { 
 			action: 'imgmap_load_dialog_post',
-			id: data.key.replace('area-', '')
+			id: key.replace('area-', '')
 			}, function(response) {
 			jQuery(dialog).html(response).dialog('open');
 		});
-	}
 }
 

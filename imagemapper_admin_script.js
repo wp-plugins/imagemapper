@@ -47,6 +47,11 @@ jQuery(function($) {
 		$('.delete-area').click(DeleteArea);
 		
 		$('#imagemap-image-container').attr('data-initpos', $('#imagemap-image-container').offset().top);
+		
+		/* Scrolling effect so that the image on Image map page would scroll with the screen when scrolling a large amount of image map areas
+		 * in the list on the right 
+		 * It didn't end up in high quality and the idea was rather bad. Possibly going to remove this in future releases*/
+		 /*
 		$(window).scroll(function() {
 			var element = $('#imagemap-image-container');
 			var topPosition = $(window).scrollTop() - element.attr('data-initpos') + 35;
@@ -65,7 +70,7 @@ jQuery(function($) {
 					Math.max(0, Math.min(val, $('#poststuff').height() - element.height() - 114)) +'px' 
 				}, 400);
 			}
-		});
+		}); */
 		
 	}
 	$('.insert-media-imagemap').click(insertImageMap);

@@ -3,7 +3,7 @@
 Plugin Name: ImageMapper
 Plugin URI: https://github.com/SpaikFi/ImageMapper
 Description: Create interactive and visual image maps with a visual editor! Based on the ImageMapster jQuery plugin.
-Version: 0.5
+Version: 1.0
 Author: A.Sandberg AKA Spike
 Author URI: http://spike.viuhka.fi
 License: GPL2
@@ -40,6 +40,7 @@ add_filter( 'manage_edit-'.IMAGEMAP_AREA_POST_TYPE.'_sortable_columns', 'imgmap_
 
 add_filter('media_upload_tabs', 'imgmap_media_upload_tab');
 add_action('media_upload_imagemap', 'imgmap_media_upload_tab_action');
+add_action('admin_action_imgmap_save_settings', 'imgmap_save_settings');
 
 $image_maps = array();
 
@@ -63,6 +64,7 @@ $imgmap_colors = array(
 		12 => array( 'fillColor' => 'db1e65', 'strokeColor' => 'db1e65', 'fillOpacity' => 0.3, 'strokeOpacity' => 0.8, 'strokeWidth' => 2)
 		)
 );
+
 
 /* Creation of the custom post types 
  * Also script and stylesheet importing
@@ -239,14 +241,14 @@ function imgmap_save_meta($id = false) {
 		}
 	}
 	if(get_post_type($id) == IMAGEMAP_AREA_POST_TYPE) {
-		$area_vars = json_decode(get_post_meta($id, 'imgmap_area_vars', true));
+		$area_vars = imgmap_get_imgmap_area_vars($id);
 		$area_vars->type = $_POST['area-type'];
-		$area_vars->tooltip_text = $_POST['area-tooltip-text'];
+		$area_vars->tooltip_text = wp_kses_post($_POST['area-tooltip-text']);
 		$area_vars->link_url = esc_url($_POST['area-link-url']);
 		$area_vars->title_attribute = esc_attr($_POST['area-title-attribute']);
 		// Save area settings in JSON format.
 		// Basically when you need one of them, you need all others as well, so it's inefficient to save them in separate columns.
-		update_post_meta($id, 'imgmap_area_vars', json_encode($area_vars));
+		update_post_meta($id, 'imgmap_area_vars', $area_vars);
 	}
 }
 
@@ -257,25 +259,27 @@ function imgmap_updated_message( $messages ) {
 		return;
 		
 	$messages[IMAGEMAP_POST_TYPE] = array(
-    0 => '', // Unused. Messages start at index 1.
-    1 => sprintf( __('Image map updated. You can add the image map to a post with Upload/Insert media tool.') ),
-    2 => __('Custom field updated.'),
-    3 => __('Custom field deleted.'),
-    4 => __('Image map updated.'),
-    5 => isset($_GET['revision']) ? sprintf( __('Image map restored to revision from %s'), wp_post_revision_title( (int) $_GET['revision'], false ) ) : false,
-    6 => sprintf( __('Image map published.')),
-    7 => __('Image map saved.'),
-    8 => sprintf( __('Image map submitted.')),
-    9 => sprintf( __('Image map scheduled for: <strong>%1$s</strong>.'), date_i18n( __( 'M j, Y @ G:i' ), strtotime( $post->post_date ) ) ),
-    10 => sprintf( __('Image map draft updated.')),
+		0 => '', // Unused. Messages start at index 1.
+		1 => sprintf( __('Image map updated. You can add the image map to a post with Upload/Insert media tool.') ),
+		2 => __('Custom field updated.'),
+		3 => __('Custom field deleted.'),
+		4 => __('Image map updated.'),
+		5 => isset($_GET['revision']) ? sprintf( __('Image map restored to revision from %s'), wp_post_revision_title( (int) $_GET['revision'], false ) ) : false,
+		6 => sprintf( __('Image map published.')),
+		7 => __('Image map saved.'),
+		8 => sprintf( __('Image map submitted.')),
+		9 => sprintf( __('Image map scheduled for: <strong>%1$s</strong>.'), date_i18n( __( 'M j, Y @ G:i' ), strtotime( $post->post_date ) ) ),
+		10 => sprintf( __('Image map draft updated.')),
 	);
 	
 	return $messages;
 }
 
 function imgmap_imagemap_tab_menu() {
-	add_submenu_page('edit.php?post_type='.IMAGEMAP_AREA_POST_TYPE, 'Imagemap area styles', 'Highlight styles', 'edit_posts', basename(__FILE__), 'imgmap_area_styles');
+	add_submenu_page('edit.php?post_type='.IMAGEMAP_AREA_POST_TYPE, 'Imagemap area styles', 'Highlight styles', 'edit_posts', 'imagemap-area-styles', 'imgmap_area_styles');
+	add_submenu_page('edit.php?post_type='.IMAGEMAP_POST_TYPE, 'Image map settings', 'Image map settings', 'edit_posts', 'imagemap-settings', 'imgmap_imagemap_settings');
 }
+
 
 /* Add custom fields to the custom post type forms. 
  * */
@@ -290,7 +294,7 @@ function imgmap_custom_form() {
 		
 	add_meta_box('imagemap-area-highlight', 'Highlight', 'imgmap_area_form_highlight', IMAGEMAP_AREA_POST_TYPE, 'side');
 	add_meta_box('imagemap-area-settings', 'Settings', 'imgmap_area_form_settings', IMAGEMAP_AREA_POST_TYPE, 'side');
-	add_meta_box('imagemap-area-types', 'Click event', 'imgmap_area_form_types', IMAGEMAP_AREA_POST_TYPE, 'normal');
+	add_meta_box('imagemap-area-types', 'Mouse event', 'imgmap_area_form_types', IMAGEMAP_AREA_POST_TYPE, 'normal');
 }
 
 /* Custom field for the imagemap image.
@@ -361,9 +365,28 @@ function get_imgmap_frontend_image($id, $element_id) {
 	}
 	$value .= '</map>';
 	
-	//foreach($areas as $a) {
-	//	$value .= '<a href="#">Post: '.$a->post_title.'</a>';
-	//}
+	$altLink = get_option('imgmap-alternative-link-positions');
+	
+	if($altLink == 'hidden' || $altLink == 'visible') {
+		
+		if($altLink == 'hidden') {
+			$value .= '
+			<a class="altlinks-toggle" data-parent="'.$element_id.'">Show links</a>
+			<div class="altlinks-container hidden" id="altlinks-container-'.$element_id.'">';
+		}
+		else
+			$value .= '<div class="altlinks-container">';
+		
+		
+		foreach($areas as $a) {
+			$title = $a->post_title == '' ? '(untitled)' : $a->post_title;
+			$meta = imgmap_get_imgmap_area_vars($a->ID);
+			$url = $meta->type == 'link' ? ' href="'.$meta->link_url.'"' : '';
+			$value .= '<a class="alternative-links-imagemap"'.$url.' data-key="area-'.$a->ID.'" data-type="'.$meta->type.'" data-parent="imgmap-'.$element_id.'">'.$title.'</a>, ';
+		}
+		$value = substr($value, 0, -2);
+		$value .= '</div>';
+	}
 	$value .= '
 	</div>';
 	return $value;
@@ -394,18 +417,18 @@ function imgmap_form_areas($post) {
 
 /* Settings for the single imagemap area */
 function imgmap_area_form_settings($post) { 
-$meta = json_decode(get_post_meta($post->ID, 'imgmap_area_vars', true)); 
-$meta->title_attribute = isset($meta->title_attribute) ? $meta->title_attribute : '';
-?>
-<p><input style="width: 100%" type="text" name="area-title-attribute" value="<?php echo $meta->title_attribute; ?>" placeholder="HTML title attribute"></p>
-<p><a title="The HTML title attribute often shows as a small tooltip when mouse hovers over an element.">What is this?<br>Hover mouse over this text for an example.</a></p>
-<?php
+	$meta = imgmap_get_imgmap_area_vars($post->ID);
+	$meta->title_attribute = isset($meta->title_attribute) ? $meta->title_attribute : '';
+	?>
+	<p><input style="width: 100%" type="text" name="area-title-attribute" value="<?php echo $meta->title_attribute; ?>" placeholder="HTML title attribute"></p>
+	<p><a title="The HTML title attribute often shows as a small tooltip when mouse hovers over an element.">What is this?<br>Hover mouse over this text for an example.</a></p>
+	<?php
 }
 
 /* Settings for the single imagemap area highlight */
 function imgmap_area_form_highlight($post) {
 	$imgmap_colors = get_option('imgmap_colors');
-	$meta = json_decode(get_post_meta($post->ID, 'imgmap_area_vars', true));
+	$meta = imgmap_get_imgmap_area_vars($post->ID);
 	?> 
 	<div id="imgmap-area-styles"><?php
 	foreach($imgmap_colors['colors'] as $key => $color) { 
@@ -504,10 +527,58 @@ function imgmap_area_styles() { ?>
 	</div>
 	<?php
 }
+		
+function imgmap_imagemap_settings() {
+	register_setting('imgmap-settings', 'imgmap-alternative-link-positions');
+	
+	if(!get_option('imgmap-alternative-link-positions'))
+		update_option('imgmap-alternative-link-positions', 'off');
+	
+	?>
+	<div class="wrap">
+		<h2><?php _e('Image map settings'); ?></h2>
+		<form method="post" action="<?php echo admin_url('admin.php'); ?>">
+		<input type="hidden" name="action" value="imgmap_save_settings" />
+		<?php wp_nonce_field('imgmap-settings'); ?>
+		<table class="form-table">
+			<tr valign="top">
+			<th scope="row"><a title="Provides corresponding links for the areas of an image map below the image. Use if you're concerned of if users are able to use the image map correctly.">Fallback links for areas.</a></th>
+			<td>
+				<input type="radio" name="imgmap-settings-fallback-link-position" value="off" <?php echo get_option('imgmap-alternative-link-positions') == 'off' ? 'checked' : ''; ?> /> <?php _e('No'); ?><br>
+				<input type="radio" name="imgmap-settings-fallback-link-position" value="hidden" <?php echo get_option('imgmap-alternative-link-positions') == 'hidden' ? 'checked' : ''; ?> /> <?php _e('Hidden'); ?><br>
+				<input type="radio" name="imgmap-settings-fallback-link-position" value="visible" <?php echo get_option('imgmap-alternative-link-positions') == 'visible' ? 'checked' : ''; ?> /> <?php _e('Always visible'); ?>
+			</td>
+		</table>
+		
+		<?php submit_button(); ?>
+		</form>
+	</div>
+	<?php
+}
+
+function imgmap_save_settings() {
+	update_option('imgmap-alternative-link-positions', $_POST['imgmap-settings-fallback-link-position']);
+	wp_redirect($_POST['_wp_http_referer']);
+}
+
+function imgmap_get_imgmap_area_vars($id) {
+	$meta = get_post_meta($id, 'imgmap_area_vars', true);
+	
+	// In 0.5 and earlier versions imgmap_area_vars were saved as JSON string.
+	// It was changed because there was a problem with scandinavian letters and JSON encoding
+	if(is_string($meta)) 
+		$meta = json_decode($meta);
+	
+	// Disables Creating object from empty value warnings.
+	if(empty($meta)) 
+		$meta = new StdClass();
+	
+	return $meta;
+}
 
 function imgmap_area_form_types($post) { 
 	// Get area variables from post meta 
-	$meta = json_decode(get_post_meta($post->ID, 'imgmap_area_vars', true));
+	$meta = imgmap_get_imgmap_area_vars($post->ID);
 	$meta->type = isset($meta->type) ? $meta->type : '';
 	$meta->tooltip_text = isset($meta->tooltip_text) ? $meta->tooltip_text : '';
 	$meta->link_url = isset($meta->link_url) ? $meta->link_url : '';
@@ -535,8 +606,9 @@ function imgmap_area_form_types($post) {
 		?></div>
 		<div id="imagemap-area-tooltip-editor" class="area-type-editors <?php echo $meta->type == 'tooltip' ? 'area-type-editor-current' : '' ?>">
 			<p><label>Tooltip text <br />
-				<textarea cols="60" rows="8" name="area-tooltip-text"><?php echo $meta->tooltip_text ?></textarea>
+				<textarea name="area-tooltip-text" cols="50" rows="6"><?php echo $meta->tooltip_text; ?></textarea>
 			</label></p>
+			<p>HTML elements such as links and images are allowed.</p>
 		</div>
 		<div id="imagemap-area-link-editor" class="area-type-editors <?php echo $meta->type == 'link' ? 'area-type-editor-current' : '' ?>">
 			<p><label>Url address: <br /><input type="text" name="area-link-url" value="<?php echo $meta->link_url; ?>"></label></p>
@@ -554,7 +626,7 @@ function imgmap_save_area_ajax() {
 	$area = new StdClass();
 	$area->coords = $_POST['coords'];
 	$area->text = '';
-	$area->title = 'New image map area'; 
+	$area->title = '(untitled image map area)'; 
 	$area->title_attribute = '';
 	$area->parent = $_POST['parent_post'];
 	$post = array(
@@ -590,7 +662,7 @@ function imgmap_delete_area_ajax() {
 /* Creates an area element to the HTML image map */
 function imgmap_create_area_element($id, $title) {	
 	$imgmap_colors = get_option('imgmap_colors');
-	$meta = json_decode(get_post_meta($id, 'imgmap_area_vars', true));
+	$meta = imgmap_get_imgmap_area_vars($id);
 	
 	if($meta === null)
 		$meta = new StdClass();
@@ -738,7 +810,7 @@ function imgmap_set_area_color() {
 	if(current_user_can('manage_options')) {
 		$id = $_POST['post'];
 		$color = $_POST['color'];
-		$meta = json_decode(get_post_meta($id, 'imgmap_area_vars', true));
+		$meta = imgmap_get_imgmap_area_vars($id);
 		echo json_encode($meta);
 		$meta->color = $color;
 		update_post_meta($id, 'imgmap_area_vars', json_encode($meta));
