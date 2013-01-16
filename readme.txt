@@ -29,6 +29,11 @@ Instructions:
 
 == Changelog ==
 
+= 1.0 =
+* Fixed a bug with scandinavian letters in tooltips.
+* Added a fallback links setting for image maps. Admins can choose if they want to show links corresponding the areas of the image map below the image to the user.
+* Disabled scrolling effect in Image map editor page. 
+
 = 0.5 = 
 * Fixed bug where a highlight's fill opacity affected to the stroke opacity in style preview. 
 * Added color picker support for highlight fill color and stroke color fields. (Using the Iris color picker introduced in WP 3.5)
