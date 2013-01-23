@@ -15,7 +15,7 @@ ImageMapper is a WordPress plugin designed to add interactivity in images in pos
 
 Redirecting user to a different page when clicking certain character in a web comic? Displaying a person's name and home page link in a group photo when mouse is hovering over them? Showing additional info and notes in a large graphs? Possible.
 
-Based on the ImageMapster jQuery plugin. [Imagemapster homepage][WordPress](http://www.outsharked.com/imagemapster/).
+Based on the ImageMapster jQuery plugin. [Imagemapster homepage](http://www.outsharked.com/imagemapster/).
 The map of Finland in the banner image is provided by National Land Survey of Finland.
 
 == Installation ==
