@@ -7,27 +7,39 @@ Stable tag: 1.0
 License: GPLv2
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
-Create interactive and visual image maps with a visual editor. Based on the ImageMapster jQuery plugin.
+Create interactive and visual image maps with a visual editor.
 
 == Description ==
 
-Create interactive and visual image maps with a visual editor! Based on the ImageMapster jQuery plugin.
+ImageMapper is a WordPress plugin designed to add interactivity in images in posts. The plugin was originally designed for web comics, but with its good customization options it can be used for adding interactivity to any kind of images. 
 
-Instructions:
-- Create new Image map, select an image to upload and update post
-- The image should be displayed in the post form after refreshing.
-- To add new areas to the image, start creating the path simply by clicking the image. When the path looks good press Add area.
-- The new area will be added in the Areas list and it will shown in the image as well.
-- To edit the content of the new area, click the area in the Areas list. It will redirect you to the editing form of the image map area.
-- Create a new post and open Insert/Upload media window. Select the image map tab and click the imagemap to insert it into the post.
+Redirecting user to a different page when clicking certain character in a web comic? Displaying a person's name and home page link in a group photo when mouse is hovering over them? Showing additional info and notes in a large graphs? Possible.
+
+Based on the ImageMapster jQuery plugin. [Imagemapster homepage][WordPress](http://www.outsharked.com/imagemapster/).
+The map of Finland in the banner image is provided by National Land Survey of Finland.
 
 == Installation ==
 
 1. Upload imagemapper folder to the `/wp-content/plugins/` directory
-2. Activate the plugin through the 'Plugins' menu in WordPress
-3. Optional: Create single_imgmap.php template file in your theme directory and place `<?php do_action('imgmapper_frontend_image', $post_id); ?>` in it.
+1. Activate the plugin through the 'Plugins' menu in WordPress
+
+How to create a new Image map:
+1. Choose Image maps from the left of Wordpress admin panel and create a new image map.
+1. Choose the image file and save the post to upload it.
+1. To add new areas to the image, start creating the path by clicking the image. When the path looks good press Add area. The area will appear in the area list on the image map editing page.
+1. You can edit the content of the area by clicking Edit page from the area list.
+
+How to insert image map to a post:
+1. Adding image map to the post is simple. After you have created the image map, go to the post page. 
+1. Click Add Media (or Insert/Upload media) and choose Image map tab. 
+1. Click the image map you want to insert into the post.
 
 == Changelog ==
+
+= 1.1 =
+* Popup windows can now be closed by clicking outside the window.
+* Admins can now choose if they want to show all the image map areas for a short time when user moves the mouse on the image (for the first time or always). This helps users to realize that they can get additional information about the image by searching for highlights.
+* Minor bug fixes.
 
 = 1.0 =
 * Fixed a bug with scandinavian letters in tooltips.
