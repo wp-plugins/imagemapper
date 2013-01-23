@@ -3,7 +3,7 @@ Contributors: spikefinned
 Tags: image map, imagemap, images, interactive images
 Requires at least: 3.3.1
 Tested up to: 3.5
-Stable tag: 1.0
+Stable tag: 1.1
 License: GPLv2
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -15,7 +15,7 @@ ImageMapper is a WordPress plugin designed to add interactivity in images in pos
 
 Redirecting user to a different page when clicking certain character in a web comic? Displaying a person's name and home page link in a group photo when mouse is hovering over them? Showing additional info and notes in a large graphs? Possible.
 
-Based on the ImageMapster jQuery plugin. [Imagemapster homepage](http://www.outsharked.com/imagemapster/).
+Based on the ImageMapster jQuery plugin. [ImageMapster homepage](http://www.outsharked.com/imagemapster/).
 
 The map of Finland in the banner image is provided by National Land Survey of Finland.
 

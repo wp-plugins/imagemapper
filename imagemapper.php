@@ -1,9 +1,9 @@
 <?php
 /*
 Plugin Name: ImageMapper
-Plugin URI: https://github.com/SpaikFi/ImageMapper
-Description: Create interactive and visual image maps with a visual editor! Based on the ImageMapster jQuery plugin.
-Version: 1.0
+Plugin URI: http://wordpress.org/support/plugin/imagemapper
+Description: Create interactive and visual image maps with a visual editor!
+Version: 1.1
 Author: A.Sandberg AKA Spike
 Author URI: http://spike.viuhka.fi
 License: GPL2
@@ -154,7 +154,8 @@ function imgmap_create_post_type() {
 	
 	
 	wp_localize_script('imgmap_script', 'imgmap', array(
-		'ajaxurl' => admin_url('admin-ajax.php')));
+		'ajaxurl' => admin_url('admin-ajax.php'),
+		'pulseOption' => get_option('imgmap-pulse')));
 };
 
 // Set custom columns for imagemap archive page
@@ -337,9 +338,11 @@ function media_imgmap_media_upload_tab_inside() {
 	<p>
 		<?php
 		$areas = get_posts('post_type='.IMAGEMAP_POST_TYPE.'&numberposts=-1');
-		foreach($areas as $a) { ?>
+		foreach($areas as $a) { 
+		$title = strlen($a->post_title) == 0 ? '(untitled)' : $a->post_title;
+			?>
 			<div data-imagemap="<?php echo $a->ID; ?>" class="insert-media-imagemap" style="background-image: url(<?php echo get_post_meta($a->ID, 'imgmap_image', true); ?>);">
-				<div><?php echo $a->post_title ?></div>
+				<div><?php echo $title ?></div>
 			</div>
 		<?php }
 		?>
@@ -381,6 +384,7 @@ function get_imgmap_frontend_image($id, $element_id) {
 		foreach($areas as $a) {
 			$title = $a->post_title == '' ? '(untitled)' : $a->post_title;
 			$meta = imgmap_get_imgmap_area_vars($a->ID);
+			$meta->type = isset($meta->type) ? $meta->type : 'popup';
 			$url = $meta->type == 'link' ? ' href="'.$meta->link_url.'"' : '';
 			$value .= '<a class="alternative-links-imagemap"'.$url.' data-key="area-'.$a->ID.'" data-type="'.$meta->type.'" data-parent="imgmap-'.$element_id.'">'.$title.'</a>, ';
 		}
@@ -533,6 +537,9 @@ function imgmap_imagemap_settings() {
 	
 	if(!get_option('imgmap-alternative-link-positions'))
 		update_option('imgmap-alternative-link-positions', 'off');
+		
+	if(!get_option('imgmap-pulse'))
+		update_option('imgmap-pulse', 'never');
 	
 	?>
 	<div class="wrap">
@@ -542,12 +549,21 @@ function imgmap_imagemap_settings() {
 		<?php wp_nonce_field('imgmap-settings'); ?>
 		<table class="form-table">
 			<tr valign="top">
-			<th scope="row"><a title="Provides corresponding links for the areas of an image map below the image. Use if you're concerned of if users are able to use the image map correctly.">Fallback links for areas.</a></th>
-			<td>
-				<input type="radio" name="imgmap-settings-fallback-link-position" value="off" <?php echo get_option('imgmap-alternative-link-positions') == 'off' ? 'checked' : ''; ?> /> <?php _e('No'); ?><br>
-				<input type="radio" name="imgmap-settings-fallback-link-position" value="hidden" <?php echo get_option('imgmap-alternative-link-positions') == 'hidden' ? 'checked' : ''; ?> /> <?php _e('Hidden'); ?><br>
-				<input type="radio" name="imgmap-settings-fallback-link-position" value="visible" <?php echo get_option('imgmap-alternative-link-positions') == 'visible' ? 'checked' : ''; ?> /> <?php _e('Always visible'); ?>
-			</td>
+				<th scope="row"><a title="Provides corresponding links for the areas of an image map below the image. Use if you're concerned of if users are able to use the image map correctly.">Fallback links for areas.</a></th>
+				<td>
+					<input type="radio" name="imgmap-settings-fallback-link-position" value="off" <?php echo get_option('imgmap-alternative-link-positions') == 'off' ? 'checked' : ''; ?> /> <?php _e('No'); ?><br>
+					<input type="radio" name="imgmap-settings-fallback-link-position" value="hidden" <?php echo get_option('imgmap-alternative-link-positions') == 'hidden' ? 'checked' : ''; ?> /> <?php _e('Hidden'); ?><br>
+					<input type="radio" name="imgmap-settings-fallback-link-position" value="visible" <?php echo get_option('imgmap-alternative-link-positions') == 'visible' ? 'checked' : ''; ?> /> <?php _e('Always visible'); ?>
+				</td>
+			</tr>
+			<tr valign="top">
+				<th scope="row"><a title="Highlights all areas for a short time when mouse is moved over an image map.">Highlight all areas</a></th>
+				<td>
+					<input type="radio" name="imgmap-settings-pulse" value="never" <?php echo get_option('imgmap-pulse') == 'never' ? 'checked' : ''; ?> /> <?php _e('Never'); ?><br>
+					<input type="radio" name="imgmap-settings-pulse" value="first_time" <?php echo get_option('imgmap-pulse') == 'first_time' ? 'checked' : ''; ?> /> <?php _e('When mouse is moved over the image map first time.'); ?><br>
+					<input type="radio" name="imgmap-settings-pulse" value="always" <?php echo get_option('imgmap-pulse') == 'always' ? 'checked' : ''; ?> /> <?php _e('Always when mouse is moved over the image map.'); ?>
+				</td>
+			</tr>
 		</table>
 		
 		<?php submit_button(); ?>
@@ -558,6 +574,7 @@ function imgmap_imagemap_settings() {
 
 function imgmap_save_settings() {
 	update_option('imgmap-alternative-link-positions', $_POST['imgmap-settings-fallback-link-position']);
+	update_option('imgmap-pulse', $_POST['imgmap-settings-pulse']);
 	wp_redirect($_POST['_wp_http_referer']);
 }
 
@@ -579,7 +596,7 @@ function imgmap_get_imgmap_area_vars($id) {
 function imgmap_area_form_types($post) { 
 	// Get area variables from post meta 
 	$meta = imgmap_get_imgmap_area_vars($post->ID);
-	$meta->type = isset($meta->type) ? $meta->type : '';
+	$meta->type = isset($meta->type) ? $meta->type : 'popup';
 	$meta->tooltip_text = isset($meta->tooltip_text) ? $meta->tooltip_text : '';
 	$meta->link_url = isset($meta->link_url) ? $meta->link_url : '';
 	?>

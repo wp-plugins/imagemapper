@@ -151,7 +151,8 @@
     padding: 5px;
     padding-left: 10px; }
     .imgmap-dialog .ui-dialog-titlebar .ui-dialog-titlebar-close {
-      float: right; }
+      float: right;
+      color: #fff; }
   .imgmap-dialog .imgmap-dialog-wrapper {
     padding: 7px;
     min-height: 100px;

@@ -4,6 +4,9 @@ var Image;
 var Canvas, Ctx;
 
 jQuery(function($) {
+	
+	
+	
 	$('img[usemap]').each(function() {
 		var areas = [];
 		$('map[name="' + $(this).attr('usemap').substr(1) + '"]').find('area').each(function() {
@@ -17,26 +20,76 @@ jQuery(function($) {
 					'strokeColor': $(this).attr('data-stroke-color'),
 					'strokeOpacity': $(this).attr('data-stroke-opacity'),
 					'stroke': $(this).attr('data-stroke-width') > 0,
-					'strokeWidth': $(this).attr('data-stroke-width')
+					'strokeWidth': $(this).attr('data-stroke-width'),
+					'fade': true,
+					'fadeDuration': 300
 				}
 			});
 		});
-		// console.log(areas);
+		
+		var map = this;
 		$(this).mapster({
 			clickNavigate: true,
 			showToolTip: true,
 			toolTipContainer: $('<div class="imagemapper-tooltip"></div>'),
-			toolTipClose: ['area-click', 'tooltip-click'],
-			mouseoutDelay: 800,
+			toolTipClose: ['area-click'],
 			mapKey: 'data-mapkey',
 			onClick: AreaClicked,
+			onMouseover: function(m) {
+				if(!m.options.toolTip.length)
+					$(map).mapster('tooltip', false);
+					
+				clearTimeout($(map).data('mapster-highlight-timeout'));
+				$(map).mapster('highlight', false);
+				$(map).mapster('highlight', m.key);
+			},
 			singleSelect: true,
 			render_select: {
 				fillOpacity: 0
 			},
 			areas: areas
 		});
-			
+
+		// If pulse option is set, initialize it.
+		if(imgmap.pulseOption && imgmap.pulseOption != 'never') {
+			$(this).mouseenter(function(e) {
+				
+				//Prevent pulse from happening when mouse moves on the image map from tooltip or area. (Prevent mouseenter from "inner" elements)
+				if($(e.fromElement).hasClass('imagemapper-tooltip') || $(e.fromElement).is('area')) 
+					return;
+				
+				//If this is set true, the pulse has been done already and Wordpress doesn't want to do it again.
+				if(!$(this).attr('data-first-mouseenter')) {
+					
+					//Mark image map as "pulsed" if the first_time pulse option is set.
+					if(imgmap.pulseOption == 'first_time')
+						$(this).attr('data-first-mouseenter', true);
+					
+					//Prevent duplicate highlights
+					$(this).mapster('highlight', false);
+					//Highlight all areas
+					for(var area in areas) {
+						$(this).mapster('highlight', areas[area].key);
+					}
+					
+					var map = this;
+					
+					// Stop highlighting after a short delay
+					// Also fade highlighted areas out rather than hide them instantly
+					clearTimeout($(this).data('mapster-highlight-timeout'));
+					$(this).data('mapster-highlight-timeout', setTimeout(function() { 
+						$(map).closest('.imgmap-frontend-image').find('canvas').each(function() { 
+							$(this).stop().animate({ opacity: 0 }, 300, function() { $(map).mapster('highlight', false); });
+						});						
+					}, 500));
+				}
+			});
+		}
+		//Close tooltips when clicking outside the tooltip.
+		$('body').click(function(e) {
+			if(!$(e.target).is('.imagemapper-tooltip') && !$(e.target).closest('.imagemapper-tooltip').length && $(e.target).attr('data-type') != 'tooltip')
+				$(map).mapster('tooltip', false);
+		}); 
 	});
 	
 	$('.imgmap-dialog-wrapper').dialog({ 
@@ -49,7 +102,9 @@ jQuery(function($) {
 			of: $(parent)
 			}
 		});
-	$('.mapster_el').load(function() {
+	$('body').click(function(e) {
+		if(!$(e.target).is('.ui-dialog, a') && !$(e.target).closest('.ui-dialog').length)
+			$('.imgmap-dialog-wrapper').each(function(e) { $(this).dialog('close'); });
 	});
 	
 	$('.alternative-links-imagemap').
@@ -79,29 +134,27 @@ function AlternativeLinkClicked() {
 	AlternativeLinkAction(key, type, parent);
 }
 
-function AlternativeLinkAction(areaKey, areaType, imgmap) {
+function AlternativeLinkAction(areaKey, areaType, imagemap) {
 	switch(areaType) {
 		case 'popup': 
-			OpenImgmapDialog(areaKey, jQuery('map[name="' + imgmap + '"]').get(0));
+			OpenImgmapDialog(areaKey, jQuery('map[name="' + imagemap + '"]').get(0));
 		break;
 		
 		case 'tooltip':
-			imgmap = imgmap.replace('imgmap', '#imagemap');
-			jQuery(imgmap).mapster('tooltip', areaKey);
+			imagemap = jQuery('img[usemap="#' + imagemap + '"]').get(0);
+			jQuery(imagemap).mapster('tooltip', areaKey);
 		break;
 	}
 }
 
 function AreaClicked(data) {
 	var type = jQuery('area[data-mapKey='+data.key+']').attr('data-type'); 
-	// console.log(type);
 	if(type == 'popup' || type == '' ) {
 		OpenImgmapDialog(data.key, jQuery(this).parent()[0]);
 	}
 }
 
 function OpenImgmapDialog(key, parent) {
-	console.log(key + ', ' + parent);
 	var dialog = parent.name.replace('imgmap', '#imgmap-dialog');
 		jQuery(dialog).dialog('option', 'title', jQuery('area[data-mapkey='+key+']').attr('title'));
 		jQuery.post(imgmap.ajaxurl, { 

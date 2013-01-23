@@ -78,7 +78,6 @@ jQuery(function($) {
 	$('.imgmap-color-picker').each(function() {
 		$(this).farbtastic({
 			callback: function(color) {
-				// console.log(color);
 			},
 			width: 100,
 			height: 100
@@ -169,7 +168,6 @@ function insertImageMap() {
 }
 
 function AreaClicked(data) {
-	// console.log(data);
 }
 
 function FileAPIAvailable() {
@@ -177,7 +175,6 @@ function FileAPIAvailable() {
 }
 
 function ShowTypes(typeToShow) {
-	// console.log('input[value="'+typeToShow+'"][name="area-type"]');
 	jQuery('input[value="'+typeToShow+'"][name="area-type"]').attr('checked', true);
 	jQuery('.area-type-editors, .area-type-instructions').hide();
 	jQuery('#imagemap-area-'+typeToShow+'-editor').show(200);
@@ -263,11 +260,10 @@ function AddArea() {
 		parent_post: jQuery('#post_ID').val(),
 		coords: coordinates_to_send.join(',')
 	}, function(response) {
-		// console.log(response);
 		response = JSON.parse(response);
 		jQuery('#imagemap-areas > div > ul').prepend(response.html);
 		jQuery('.area-list-element').change(function() { DrawSavedAreas(SavedAreasCanvas, SACtx); });
-		jQuery('.delete-area').click(DeleteArea);
+		jQuery('.delete-area').unbind('click').click(DeleteArea);
 		Coords = [];
 		Ctx.clearRect(0, 0, Canvas.width, Canvas.height);
 		DrawSavedAreas(SavedAreasCanvas, SACtx);
@@ -326,7 +322,6 @@ function SaveTitle(id) {
 		id: id,
 		title: jQuery('#'+id+'-list-area-title').val() 
 		}, function(response) {
-			// console.log(response);
 		});
 }
 
@@ -337,7 +332,6 @@ function SetColor(id) {
 		post: jQuery('#post_ID').val(),
 		title: jQuery('#'+id+'-list-area-title').val() 
 		}, function(response) {
-			// console.log(response);
 		});
 }
 
