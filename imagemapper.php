@@ -3,7 +3,7 @@
 Plugin Name: ImageMapper
 Plugin URI: http://wordpress.org/support/plugin/imagemapper
 Description: Create interactive and visual image maps with a visual editor!
-Version: 1.1
+Version: 1.1.1
 Author: A.Sandberg AKA Spike
 Author URI: http://spike.viuhka.fi
 License: GPL2
@@ -133,7 +133,29 @@ function imgmap_create_post_type() {
 
 	/* Enqueue jQuery UI, jQuery and ImageMapster */
 	wp_enqueue_style(array( 'imgmap_style' ));
-	wp_enqueue_script(array( 'jquery', 'jquery-ui-core', 'jquery-ui-dialog', 'editor', 'editor_functions', 'imgmap_imagemapster' ));
+	
+	
+	if(get_option('imgmap-include-jquery', NULL) === NULL)
+		update_option('imgmap-include-jquery', true);
+	
+	if(get_option('imgmap-include-jquery-ui', NULL) === NULL)
+		update_option('imgmap-include-jquery-ui', true);
+	
+	if(get_option('imgmap-include-jquery-ui-dialog', NULL) === NULL)
+		update_option('imgmap-include-jquery-ui-dialog', true);
+	
+	/* Not really necessary to have options to not include jquery because of the Wordpress script enqueue function.
+	if(get_option('imgmap-include-jquery'))
+		wp_enqueue_script(array( 'jquery'));
+	
+	if(get_option('imgmap-include-jquery-ui'))
+		wp_enqueue_script(array( 'jquery-ui-core'));
+		
+	if(get_option('imgmap-include-jquery-ui-dialog'))
+		wp_enqueue_script(array( 'jquery-ui-dialog'));
+	*/	
+	
+	wp_enqueue_script(array( 'jquery', 'jquery-ui', 'jquery-ui-dialog', 'editor', 'editor_functions', 'imgmap_imagemapster' ));
 	
 	/* The javascript file server needs to load for plugin's functionality depends on is the page is the admin panel or a frontend page */
 	/* (The frontend version obviously doesn't have for example the imagemap editor) */
@@ -155,7 +177,8 @@ function imgmap_create_post_type() {
 	
 	wp_localize_script('imgmap_script', 'imgmap', array(
 		'ajaxurl' => admin_url('admin-ajax.php'),
-		'pulseOption' => get_option('imgmap-pulse')));
+		'pulseOption' => get_option('imgmap-pulse'),
+		'admin_logged' => current_user_can('edit_posts')));
 };
 
 // Set custom columns for imagemap archive page
@@ -375,7 +398,7 @@ function get_imgmap_frontend_image($id, $element_id) {
 		if($altLink == 'hidden') {
 			$value .= '
 			<a class="altlinks-toggle" data-parent="'.$element_id.'">Show links</a>
-			<div class="altlinks-container hidden" id="altlinks-container-'.$element_id.'">';
+			<div class="altlinks-container imgmap-hidden" id="altlinks-container-'.$element_id.'">';
 		}
 		else
 			$value .= '<div class="altlinks-container">';
@@ -540,6 +563,7 @@ function imgmap_imagemap_settings() {
 		
 	if(!get_option('imgmap-pulse'))
 		update_option('imgmap-pulse', 'never');
+		
 	
 	?>
 	<div class="wrap">
@@ -564,6 +588,15 @@ function imgmap_imagemap_settings() {
 					<input type="radio" name="imgmap-settings-pulse" value="always" <?php echo get_option('imgmap-pulse') == 'always' ? 'checked' : ''; ?> /> <?php _e('Always when mouse is moved over the image map.'); ?>
 				</td>
 			</tr>
+			<?php /*
+			<tr valign="top">
+				<th scope="row">jQuery and jQuery UI</th>
+				<td>
+					<label><input type="checkbox" name="imgmap-settings-include-jquery" <?php echo get_option('imgmap-include-jquery') ? 'checked' : ''; ?> /> <?php _e('Include jQuery. Uncheck this if other plugin or theme is already including the library.'); ?></label><br />
+					<label><input type="checkbox" name="imgmap-settings-include-jquery-ui" <?php echo get_option('imgmap-include-jquery-ui') ? 'checked' : ''; ?> /> <?php _e('Include jQuery UI Core. Uncheck this if other plugin or theme is already including the library.'); ?></label><br />
+					<label><input type="checkbox" name="imgmap-settings-include-jquery-ui-dialog" <?php echo get_option('imgmap-include-jquery-ui-dialog') ? 'checked' : ''; ?> /> <?php _e('Include the dialog widget of jQuery UI library. Uncheck this if other plugin or theme is already including the widget. Note that the widget and jQuery UI Core versions should be the same.'); ?></label>
+				</td>
+			</tr> */ ?>
 		</table>
 		
 		<?php submit_button(); ?>
@@ -575,6 +608,11 @@ function imgmap_imagemap_settings() {
 function imgmap_save_settings() {
 	update_option('imgmap-alternative-link-positions', $_POST['imgmap-settings-fallback-link-position']);
 	update_option('imgmap-pulse', $_POST['imgmap-settings-pulse']);
+	/*
+	update_option('imgmap-include-jquery', $_POST['imgmap-settings-include-jquery']);
+	update_option('imgmap-include-jquery-ui', $_POST['imgmap-settings-include-jquery-ui']);
+	update_option('imgmap-include-jquery-ui-dialog', $_POST['imgmap-settings-include-jquery-ui-dialog']);
+	*/
 	wp_redirect($_POST['_wp_http_referer']);
 }
 

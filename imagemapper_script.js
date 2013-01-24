@@ -91,17 +91,34 @@ jQuery(function($) {
 				$(map).mapster('tooltip', false);
 		}); 
 	});
-	
-	$('.imgmap-dialog-wrapper').dialog({ 
-		autoOpen: false, 
-		zIndex: 10000,
-		width: 700,
-		show: 300,
-		dialogClass: 'imgmap-dialog',
-		position: {
-			of: $(parent)
+	if($().dialog) {
+		$('.imgmap-dialog-wrapper').dialog({ 
+			autoOpen: false, 
+			zIndex: 10000,
+			width: 700,
+			show: 300,
+			dialogClass: 'imgmap-dialog',
+			position: {
+				of: $(parent)
+				}
+			});
+	}
+	else {
+		if($('area[data-type="popup"]').length) {
+			
+			if(imgmap.admin_logged) {
+				var close = $('<a>');
+				close.text('Close').css( { cursor: 'pointer', float: 'right', fontSize: '0.9em' });
+				close.click(function() { $('.imgmap-dialog-wrapper').text(''); });
+				
+				$('.imgmap-dialog-wrapper').
+				html("There was a problem loading jQuery UI Dialog widget. A plugin or a theme you're using might be including its own copy of jQuery library which causes conflict with the copy included in Wordpress. Because of this ImageMapper isn't able to use jQuery UI Dialog widget causing the popup window function incorrectly or not at all.<br />This message is shown only to an admin. This message is shown because some of the image map areas on this page are using the popup functionality and thus not working properly.").
+				css({ color: 'red', padding: '5px', fontSize: '0.8em' }).append(close);
 			}
-		});
+		}
+	}
+	
+	
 	$('body').click(function(e) {
 		if(!$(e.target).is('.ui-dialog, a') && !$(e.target).closest('.ui-dialog').length)
 			$('.imgmap-dialog-wrapper').each(function(e) { $(this).dialog('close'); });

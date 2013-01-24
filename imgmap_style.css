@@ -162,7 +162,7 @@
 .alternative-links-imagemap {
   cursor: pointer; }
 
-.altlinks-container.hidden {
+.altlinks-container.imgmap-hidden {
   display: none; }
 
 .altlinks-toggle {

@@ -39,6 +39,9 @@ How to insert image map to a post:
 
 == Changelog ==
 
+= 1.1.1 =
+* Small bug fixes focusing on conflicts with other plugins.
+
 = 1.1 =
 * Popup windows can now be closed by clicking outside the window.
 * Admins can now choose if they want to show all the image map areas for a short time when user moves the mouse on the image (for the first time or always). This helps users to realize that they can get additional information about the image by searching for highlights.
