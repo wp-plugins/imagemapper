@@ -3,7 +3,7 @@
 Plugin Name: ImageMapper
 Plugin URI: http://wordpress.org/support/plugin/imagemapper
 Description: Create interactive and visual image maps with a visual editor!
-Version: 1.1.1
+Version: 1.2
 Author: A.Sandberg AKA Spike
 Author URI: http://spike.viuhka.fi
 License: GPL2
@@ -31,16 +31,16 @@ add_action('before_delete_post', 'imgmap_permanently_delete_imagemap');
 add_action('wp_trash_post', 'imgmap_trash_imagemap');
 add_action('manage_'.IMAGEMAP_POST_TYPE.'_posts_custom_column', 'imgmap_manage_imagemap_columns', 10, 2);
 add_action('manage_'.IMAGEMAP_AREA_POST_TYPE.'_posts_custom_column', 'imgmap_manage_imagemap_area_columns', 10, 2);
+add_action('media_upload_imagemap', 'imgmap_media_upload_tab_action');
+add_action('admin_action_imgmap_save_settings', 'imgmap_save_settings');
 
 add_filter('the_content', 'imgmap_replace_shortcode');
 add_filter('post_updated_messages', 'imgmap_updated_message');
 add_filter('manage_edit-'.IMAGEMAP_POST_TYPE.'_columns', 'imgmap_set_imagemap_columns');
 add_filter('manage_edit-'.IMAGEMAP_AREA_POST_TYPE.'_columns', 'imgmap_set_imagemap_area_columns');
 add_filter( 'manage_edit-'.IMAGEMAP_AREA_POST_TYPE.'_sortable_columns', 'imgmap_register_sortable_area_columns' );
-
 add_filter('media_upload_tabs', 'imgmap_media_upload_tab');
-add_action('media_upload_imagemap', 'imgmap_media_upload_tab_action');
-add_action('admin_action_imgmap_save_settings', 'imgmap_save_settings');
+
 
 $image_maps = array();
 
@@ -158,7 +158,7 @@ function imgmap_create_post_type() {
 	wp_enqueue_script(array( 'jquery', 'jquery-ui', 'jquery-ui-dialog', 'editor', 'editor_functions', 'imgmap_imagemapster' ));
 	
 	/* The javascript file server needs to load for plugin's functionality depends on is the page is the admin panel or a frontend page */
-	/* (The frontend version obviously doesn't have for example the imagemap editor) */
+	/* (The frontend version obviously doesn't have all the features backend version has, e.g. the imagemap editor) */
 	if(is_admin()) {
 		wp_register_script('imgmap_admin_script', plugins_url() . '/imagemapper/imagemapper_admin_script.js');
 		wp_enqueue_script(array('imgmap_admin_script'));
@@ -268,8 +268,11 @@ function imgmap_save_meta($id = false) {
 		$area_vars = imgmap_get_imgmap_area_vars($id);
 		$area_vars->type = $_POST['area-type'];
 		$area_vars->tooltip_text = wp_kses_post($_POST['area-tooltip-text']);
-		$area_vars->link_url = esc_url($_POST['area-link-url']);
 		$area_vars->title_attribute = esc_attr($_POST['area-title-attribute']);
+		$area_vars->link_url = esc_url($_POST['area-link-url']);
+		$area_vars->link_type = esc_attr($_POST['area-link-type']);
+		$area_vars->link_post = esc_attr($_POST['area-link-post']);
+		$area_vars->link_page = esc_attr($_POST['area-link-page']);
 		// Save area settings in JSON format.
 		// Basically when you need one of them, you need all others as well, so it's inefficient to save them in separate columns.
 		update_post_meta($id, 'imgmap_area_vars', $area_vars);
@@ -326,7 +329,9 @@ function imgmap_custom_form() {
  *  */
 function imgmap_form_image($post) {
 	?>
-	<input type="file" name="imgmap_image" id="file" />
+	<label><h4>Choose an image file to use with the image map. Save the post after choosing the file to upload it.</h4> 
+	<input type="file" name="imgmap_image" id="file" /></label>
+	<h4><?php echo strlen(get_post_meta($post->ID, 'imgmap_image', true)) > 0 ? 'Image map' : ''; ?></h4>
 	<div style="position: relative; margin-top: 30px">
 		<img src="<?php echo get_post_meta($post->ID, 'imgmap_image', true); ?>" usemap="#imgmap-<?php echo $post->ID ?>" id="imagemap-image" />
 		<canvas id="image-area-canvas"></canvas>
@@ -408,7 +413,7 @@ function get_imgmap_frontend_image($id, $element_id) {
 			$title = $a->post_title == '' ? '(untitled)' : $a->post_title;
 			$meta = imgmap_get_imgmap_area_vars($a->ID);
 			$meta->type = isset($meta->type) ? $meta->type : 'popup';
-			$url = $meta->type == 'link' ? ' href="'.$meta->link_url.'"' : '';
+			$url = $meta->type == 'link' ? ' href="'.imgmap_get_link_url($meta).'"' : '';
 			$value .= '<a class="alternative-links-imagemap"'.$url.' data-key="area-'.$a->ID.'" data-type="'.$meta->type.'" data-parent="imgmap-'.$element_id.'">'.$title.'</a>, ';
 		}
 		$value = substr($value, 0, -2);
@@ -425,9 +430,9 @@ function imgmap_form_addarea($post) {
 	?><h4><?php _e('Instructions for area shaping'); ?></h4>
 	<p><?php _e('Start creating the shape of the new area by clicking the image of the image map on the left.'); ?></p>
 	<p><?php _e('The first and the last point of the path are joined automatically'); ?></p>
-	<p><?php _e('You can use Shift + Mouse left button to go back.');?></p>
-	<p><?php _e('When the shape is ready, press the button below.');?></p>
-	<input type="button" value="Add area" id="add-area-button"/>
+<p><?php _e('When the shape is ready, press the button below.');?></p>
+	<input type="button" value="Undo" title="Shift + Mouse left" class="button" id="undo-area-button"/>
+	<input type="button" value="Add area" class="button" id="add-area-button" style="float:right"/>
 	<?php
 }
 
@@ -448,7 +453,7 @@ function imgmap_area_form_settings($post) {
 	$meta->title_attribute = isset($meta->title_attribute) ? $meta->title_attribute : '';
 	?>
 	<p><input style="width: 100%" type="text" name="area-title-attribute" value="<?php echo $meta->title_attribute; ?>" placeholder="HTML title attribute"></p>
-	<p><a title="The HTML title attribute often shows as a small tooltip when mouse hovers over an element.">What is this?<br>Hover mouse over this text for an example.</a></p>
+	<p><a title="The HTML title attribute often shows as a small tooltip when mouse hovers over an element. No tooltip is shown if the field is left empty.">What is this?<br>Hover mouse over this text for an example.</a></p>
 	<?php
 }
 
@@ -457,6 +462,7 @@ function imgmap_area_form_highlight($post) {
 	$imgmap_colors = get_option('imgmap_colors');
 	$meta = imgmap_get_imgmap_area_vars($post->ID);
 	?> 
+	<h4>Highlight styles</h4>
 	<div id="imgmap-area-styles"><?php
 	foreach($imgmap_colors['colors'] as $key => $color) { 
 		echo imgmap_get_style_element($key, $color, $meta->color);
@@ -512,7 +518,7 @@ function imgmap_area_styles() { ?>
 			<tr>
 				<td>
 					<div class="form-field">
-						<input type="text" maxlength="6" id="imgmap-new-style-fillcolor" class="color-picker-field" />
+						<input type="text" maxlength="6" id="imgmap-new-style-fillcolor" class="color-picker-field" placeholder="rrggbb" />
 					</div>
 				</td>
 				<td>
@@ -529,7 +535,7 @@ function imgmap_area_styles() { ?>
 			<tr>
 				<td>
 					<div class="form-field">
-						<input type="text" maxlength="6" id="imgmap-new-style-strokecolor" class="color-picker-field" />
+						<input type="text" maxlength="6" id="imgmap-new-style-strokecolor" class="color-picker-field" placeholder="rrggbb" />
 					</div>
 				</td>
 				<td>
@@ -637,6 +643,7 @@ function imgmap_area_form_types($post) {
 	$meta->type = isset($meta->type) ? $meta->type : 'popup';
 	$meta->tooltip_text = isset($meta->tooltip_text) ? $meta->tooltip_text : '';
 	$meta->link_url = isset($meta->link_url) ? $meta->link_url : '';
+	$meta->link_type = isset($meta->link_type) ? $meta->link_type : 'absolute';
 	?>
 	<div style="width: 20%; float: left;" id="area-form-types">
 		<p><input type="radio" name="area-type" onclick="ShowTypes('link')" value="link" <?php echo $meta->type == 'link' ? 'checked' : '' ?>> 
@@ -646,8 +653,9 @@ function imgmap_area_form_types($post) {
 		<p><input type="radio" name="area-type" onclick="ShowTypes('popup')" value="popup" <?php echo $meta->type == 'popup' ? 'checked' : '' ?>> 
 			<input type="button" class="button" onclick="ShowTypes('popup')" value="Popup window" /></p>
 	</div>
-	<div style="width: 75%; float: right;">
+	<div id="imagemap-area-type-editors">
 		<div id="imagemap-area-popup-editor" class="area-type-editors <?php echo $meta->type == 'popup' ? 'area-type-editor-current' : '' ?>">
+		<h4>Show text and images in a popup window when user clicks the area</h4>
 		<?php 
 		if(function_exists('wp_editor')) {
 			wp_editor($post->post_content, 'content', array( 'editor_css' => '<style> body { min-height: 300px; background-color: white; } </style>' )); 
@@ -660,13 +668,27 @@ function imgmap_area_form_types($post) {
 		}
 		?></div>
 		<div id="imagemap-area-tooltip-editor" class="area-type-editors <?php echo $meta->type == 'tooltip' ? 'area-type-editor-current' : '' ?>">
+		<h4>Show a small tooltip when users move their mouse on the area</h4>
 			<p><label>Tooltip text <br />
 				<textarea name="area-tooltip-text" cols="50" rows="6"><?php echo $meta->tooltip_text; ?></textarea>
 			</label></p>
-			<p>HTML elements such as links and images are allowed.</p>
+			<p>HTML elements such as links and images are allowed. Javascript not so much.</p>
 		</div>
 		<div id="imagemap-area-link-editor" class="area-type-editors <?php echo $meta->type == 'link' ? 'area-type-editor-current' : '' ?>">
-			<p><label>Url address: <br /><input type="text" name="area-link-url" value="<?php echo $meta->link_url; ?>"></label></p>
+		<h4>Select where users should be redirected when they click the area</h4>
+			<table>
+				<tr>
+			<td><label><input type="radio" name="area-link-type" value="post" <?php echo $meta->link_type == 'post' ? 'checked' : ''; ?>> Link to an existing post:</label></td>
+			<td>
+				<select name="area-link-post"><?php 
+				$posts = get_posts(array('numberposts' => -1));
+				foreach($posts as $post) { echo '<option value="'.$post->ID.'" '.($meta->link_post == $post->ID ? 'selected' : '').'>'.(strlen($post->post_title) ? $post->post_title : '(untitled, id: '.$post->ID.')').'</option>'; }
+				?></select>
+			</td>
+			<tr><td><label><input type="radio" name="area-link-type" value="page" <?php echo $meta->link_type == 'page' ? 'checked' : ''; ?>> Link to an existing page:</label></td><td><?php wp_dropdown_pages(array('name' => 'area-link-page', 'selected' => $meta->link_page)); ?></td></tr>
+			<tr><td><label><input type="radio" name="area-link-type" value="absolute" <?php echo $meta->link_type == 'absolute' ? 'checked' : ''; ?>> Link to an url address:</label></td><td><input type="text" name="area-link-url" value="<?php echo $meta->link_url; ?>"></td></tr>
+			</tr>
+			</table>
 		</div>
 	</div>
 	<br style="clear:both">
@@ -702,7 +724,7 @@ function imgmap_save_area_ajax() {
 	
 	$meta->color = $styles['last_chosen'];
 	update_post_meta($area->id, 'imgmap_area_vars', json_encode($meta));
-	$area->html = imgmap_create_list_element($area->id);
+	$area->html = imgmap_create_list_element($area->id, true);
 	ob_clean();
 	echo json_encode($area);
 	die();
@@ -732,7 +754,8 @@ function imgmap_create_area_element($id, $title) {
 	
 	$meta->type = isset($meta->type) ? $meta->type : '';
 	$meta->tooltip_text = isset($meta->tooltip_text) ? $meta->tooltip_text : '';
-	$meta->link_url = isset($meta->link_url) ? $meta->link_url : '';
+	$link = imgmap_get_link_url($meta);
+	
 	$meta->title_attribute = isset($meta->title_attribute) ? $meta->title_attribute : '';
 	
 	return '
@@ -746,14 +769,14 @@ function imgmap_create_area_element($id, $title) {
 	data-stroke-width="'.esc_attr($color['strokeWidth']).'"
 	data-mapkey="area-'.$id.'" 
 	shape="poly" coords="'.esc_attr(get_post_meta($id, 'coords', true)).'" 
-	href="'.esc_attr($meta->type == 'link' ? $meta->link_url : '#') .'"
+	href="'.esc_attr($link) .'"
 	title="'.(isset($meta->title_attribute) ? $meta->title_attribute : $title).'" />';
 }
 
 /* Creates an list element to the list of imagemap's areas. */
-function imgmap_create_list_element($id) {
+function imgmap_create_list_element($id, $animated = false) {
 	return 
-	'<li data-listkey="area-'.$id.'" class="area-list-element">
+	'<li data-listkey="area-'.$id.'" class="area-list-element '.($animated ? 'area-list-element-animated' : '').'">
 	<div class="area-list-left">
 		<input id="area-checkbox-'.$id.'" data-listkey="area-'.$id.'" type="checkbox" checked>
 	</div>
@@ -766,6 +789,17 @@ function imgmap_create_list_element($id) {
 		</div>
 	</div>
 	</li>';
+}
+
+function imgmap_get_link_url($meta) {
+	if($meta->type != 'link')
+		return '#'; 
+		
+	switch($meta->link_type) {
+		case 'post': return get_permalink($meta->link_post);
+		case 'page': return get_permalink($meta->link_page);
+		default: return isset($meta->link_url) ? $meta->link_url : '';
+	}
 }
 
 /* Template for the imagemap frontend page. 
@@ -798,9 +832,12 @@ function imgmap_load_dialog_post_ajax() {
 function imgmap_get_area_coordinates_ajax() {
 	$return = array();
 	$areas = get_posts('post_parent='.$_POST['post'].'&post_type='.IMAGEMAP_AREA_POST_TYPE.'&orderby=id&order=desc&numberposts=-1');
+	$imgmap_colors = get_option('imgmap_colors');
 	foreach($areas as $a) {
 		$newArea = new StdClass();
 		$newArea->coords = get_post_meta($a->ID, 'coords', true);
+		$vars = imgmap_get_imgmap_area_vars($a->ID);
+		$newArea->style = isset($imgmap_colors['colors'][$vars->color]) ? $imgmap_colors['colors'][$vars->color] : array( 'fillColor' => 'fefefe', 'strokeColor' => 'fefefe', 'fillOpacity' => 0.3, 'strokeOpacity' => 0.6, 'strokeWidth' => 1);;
 		$newArea->id = $a->ID;
 		$return[] = $newArea;
 	}

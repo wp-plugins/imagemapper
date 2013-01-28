@@ -2,8 +2,8 @@
 Contributors: spikefinned
 Tags: image map, imagemap, images, interactive images
 Requires at least: 3.3.1
-Tested up to: 3.5
-Stable tag: 1.1
+Tested up to: 3.5.1
+Stable tag: 1.2
 License: GPLv2
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -38,6 +38,11 @@ How to insert image map to a post:
 1. Click the image map you want to insert into the post.
 
 == Changelog ==
+
+= 1.2 =
+* Support for Wordpress internal linking.
+* Highlight in the area editor now corresponds the style setting of each area.
+* A few GUI tweaks.
 
 = 1.1.1 =
 * Small bug fixes focusing on conflicts with other plugins.

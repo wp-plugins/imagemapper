@@ -18,7 +18,8 @@ jQuery(function($) {
 		$(window).
 		keydown(function(evt) { if(evt.which == 16) { ShiftPressedDown = true; } }).
 		keyup(function(evt) { if(evt.which == 16) { ShiftPressedDown = false; } });
-			
+		
+		$('#undo-area-button').click(CoordsBack);
 		
 		$('#add-area-button').click(AddArea);
 		var img = new Image();
@@ -47,30 +48,6 @@ jQuery(function($) {
 		$('.delete-area').click(DeleteArea);
 		
 		$('#imagemap-image-container').attr('data-initpos', $('#imagemap-image-container').offset().top);
-		
-		/* Scrolling effect so that the image on Image map page would scroll with the screen when scrolling a large amount of image map areas
-		 * in the list on the right 
-		 * It didn't end up in high quality and the idea was rather bad. Possibly going to remove this in future releases*/
-		 /*
-		$(window).scroll(function() {
-			var element = $('#imagemap-image-container');
-			var topPosition = $(window).scrollTop() - element.attr('data-initpos') + 35;
-			var cssTop = parseInt(element.css('top'));
-			if(isNaN(cssTop)) { cssTop = 0; }
-			if(!((cssTop < topPosition) && (cssTop + element.height() > topPosition + $(window).height()))) {
-			// !(cssTop < topPosition) != 
-			// !(cssTop + element.height() > topPosition + $(window).height())) {
-				var val = 0;
-				if(cssTop + element.height() > topPosition + $(window).height())
-					val = topPosition - element.height() + $(window).height() - 50;
-				else
-					val = topPosition;
-				
-				element.stop().animate({ top: 
-					Math.max(0, Math.min(val, $('#poststuff').height() - element.height() - 114)) +'px' 
-				}, 400);
-			}
-		}); */
 		
 	}
 	$('.insert-media-imagemap').click(insertImageMap);
@@ -214,7 +191,7 @@ function AddCoords(x, y) {
 	for(var i = 1; i < Coords.length; i++) {
 		Ctx.lineTo(Coords[i].x, Coords[i].y);
 	}
-	Ctx.lineWidth = 3;
+	Ctx.lineWidth = 2;
 	Ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
 	Ctx.strokeStyle = 'rgba(30, 30, 30, 0.6)';
 	Ctx.closePath();
@@ -262,6 +239,7 @@ function AddArea() {
 	}, function(response) {
 		response = JSON.parse(response);
 		jQuery('#imagemap-areas > div > ul').prepend(response.html);
+		jQuery('#imagemap-areas > div > ul > li').first().show(300);
 		jQuery('.area-list-element').change(function() { DrawSavedAreas(SavedAreasCanvas, SACtx); });
 		jQuery('.delete-area').unbind('click').click(DeleteArea);
 		Coords = [];
@@ -281,7 +259,7 @@ function DeleteArea() {
 		post: id
 		}, function(response) {
 		response = JSON.parse(response);
-		element.closest('li').remove();
+		element.closest('li').hide(300, function() { jQuery(this).remove(); });
 		DrawSavedAreas(SavedAreasCanvas, SACtx);
 	});
 }
@@ -291,7 +269,7 @@ function DrawSavedAreas(canvas, ctx) {
 		action: 'imgmap_get_area_coordinates',
 		post: jQuery('#post_ID').val()
 		}, function(response) {
-		var areas = JSON.parse(response);
+			areas = JSON.parse(response);
 		ctx.clearRect(0, 0, canvas.width, canvas.height);
 		for(var i = 0; i < areas.length; i++) {
 			
@@ -304,15 +282,20 @@ function DrawSavedAreas(canvas, ctx) {
 				for(var j = 0; j < coords.length; j += 2) {
 					ctx.lineTo(coords[j], coords[j + 1]);
 				}
-				ctx.fillStyle = 'rgba(255, 0, 0, 0.8)';
-				ctx.strokeStyle = 'rgba(30, 30, 30, 0.8)';
-				ctx.lineWidth = 3;
+				ctx.fillStyle = hexToRgba(areas[i].style.fillColor, areas[i].style.fillOpacity);
+				ctx.strokeStyle = hexToRgba(areas[i].style.strokeColor, areas[i].style.strokeOpacity);
+				ctx.lineWidth = areas[i].style.strokeWidth;
 				ctx.closePath();
 				ctx.fill();
 				ctx.stroke();
 			}
 		}
 	});
+	
+	function hexToRgba(hex, opacity) {
+		var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+		return 'rgba(' + parseInt(result[1], 16) + ', ' + parseInt(result[2], 16) + ', ' + parseInt(result[3], 16) + ', ' + opacity +')';
+	}
 }
 
 function SaveTitle(id) {
