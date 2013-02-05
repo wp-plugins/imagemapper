@@ -95,7 +95,8 @@ jQuery(function($) {
 		$('.imgmap-dialog-wrapper').dialog({ 
 			autoOpen: false, 
 			zIndex: 10000,
-			width: 700,
+			maxWidth: 700,
+			width: 'auto',
 			show: 300,
 			dialogClass: 'imgmap-dialog',
 			position: {

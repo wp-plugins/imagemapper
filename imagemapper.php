@@ -3,7 +3,7 @@
 Plugin Name: ImageMapper
 Plugin URI: http://wordpress.org/support/plugin/imagemapper
 Description: Create interactive and visual image maps with a visual editor!
-Version: 1.2
+Version: 1.2.1
 Author: A.Sandberg AKA Spike
 Author URI: http://spike.viuhka.fi
 License: GPL2
@@ -644,6 +644,7 @@ function imgmap_area_form_types($post) {
 	$meta->tooltip_text = isset($meta->tooltip_text) ? $meta->tooltip_text : '';
 	$meta->link_url = isset($meta->link_url) ? $meta->link_url : '';
 	$meta->link_type = isset($meta->link_type) ? $meta->link_type : 'absolute';
+	$meta->link_page = isset($meta->link_page) ? $meta->link_page : -1;
 	?>
 	<div style="width: 20%; float: left;" id="area-form-types">
 		<p><input type="radio" name="area-type" onclick="ShowTypes('link')" value="link" <?php echo $meta->type == 'link' ? 'checked' : '' ?>> 
