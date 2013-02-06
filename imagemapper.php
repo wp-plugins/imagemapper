@@ -3,7 +3,7 @@
 Plugin Name: ImageMapper
 Plugin URI: http://wordpress.org/support/plugin/imagemapper
 Description: Create interactive and visual image maps with a visual editor!
-Version: 1.2.1
+Version: 1.2.2
 Author: A.Sandberg AKA Spike
 Author URI: http://spike.viuhka.fi
 License: GPL2
@@ -178,7 +178,8 @@ function imgmap_create_post_type() {
 	wp_localize_script('imgmap_script', 'imgmap', array(
 		'ajaxurl' => admin_url('admin-ajax.php'),
 		'pulseOption' => get_option('imgmap-pulse'),
-		'admin_logged' => current_user_can('edit_posts')));
+		'admin_logged' => current_user_can('edit_posts'),
+		'alt_dialog' => get_option('imgmap-alt-dialog')));
 };
 
 // Set custom columns for imagemap archive page
@@ -594,15 +595,13 @@ function imgmap_imagemap_settings() {
 					<input type="radio" name="imgmap-settings-pulse" value="always" <?php echo get_option('imgmap-pulse') == 'always' ? 'checked' : ''; ?> /> <?php _e('Always when mouse is moved over the image map.'); ?>
 				</td>
 			</tr>
-			<?php /*
 			<tr valign="top">
-				<th scope="row">jQuery and jQuery UI</th>
+				<th scope="row"><a title="Use if the default popup window layout doesn't look right.">Use new popup layout</a></th>
 				<td>
-					<label><input type="checkbox" name="imgmap-settings-include-jquery" <?php echo get_option('imgmap-include-jquery') ? 'checked' : ''; ?> /> <?php _e('Include jQuery. Uncheck this if other plugin or theme is already including the library.'); ?></label><br />
-					<label><input type="checkbox" name="imgmap-settings-include-jquery-ui" <?php echo get_option('imgmap-include-jquery-ui') ? 'checked' : ''; ?> /> <?php _e('Include jQuery UI Core. Uncheck this if other plugin or theme is already including the library.'); ?></label><br />
-					<label><input type="checkbox" name="imgmap-settings-include-jquery-ui-dialog" <?php echo get_option('imgmap-include-jquery-ui-dialog') ? 'checked' : ''; ?> /> <?php _e('Include the dialog widget of jQuery UI library. Uncheck this if other plugin or theme is already including the widget. Note that the widget and jQuery UI Core versions should be the same.'); ?></label>
+					<input type="radio" name="imgmap-settings-alt-dialog" value="no" <?php echo !get_option('imgmap-alt-dialog') ? 'checked' : ''; ?> /> <?php _e('No'); ?><br>
+					<input type="radio" name="imgmap-settings-alt-dialog" value="yes" <?php echo get_option('imgmap-alt-dialog') ? 'checked' : ''; ?> /> <?php _e('Yes'); ?><br>
 				</td>
-			</tr> */ ?>
+			</tr>
 		</table>
 		
 		<?php submit_button(); ?>
@@ -614,6 +613,7 @@ function imgmap_imagemap_settings() {
 function imgmap_save_settings() {
 	update_option('imgmap-alternative-link-positions', $_POST['imgmap-settings-fallback-link-position']);
 	update_option('imgmap-pulse', $_POST['imgmap-settings-pulse']);
+	update_option('imgmap-alt-dialog', $_POST['imgmap-settings-alt-dialog'] == 'yes');
 	/*
 	update_option('imgmap-include-jquery', $_POST['imgmap-settings-include-jquery']);
 	update_option('imgmap-include-jquery-ui', $_POST['imgmap-settings-include-jquery-ui']);

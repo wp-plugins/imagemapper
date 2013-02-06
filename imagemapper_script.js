@@ -5,8 +5,6 @@ var Canvas, Ctx;
 
 jQuery(function($) {
 	
-	
-	
 	$('img[usemap]').each(function() {
 		var areas = [];
 		$('map[name="' + $(this).attr('usemap').substr(1) + '"]').find('area').each(function() {
@@ -89,36 +87,41 @@ jQuery(function($) {
 		$('body').click(function(e) {
 			if(!$(e.target).is('.imagemapper-tooltip') && !$(e.target).closest('.imagemapper-tooltip').length && $(e.target).attr('data-type') != 'tooltip')
 				$(map).mapster('tooltip', false);
+				
+			if(!$(e.target).is('.imgmap-dialog-alt') && !$(e.target).closest('.imgmap-dialog-alt').length)
+				$('.imgmap-dialog-alt').hide(200);
 		}); 
 	});
-	if($().dialog) {
-		$('.imgmap-dialog-wrapper').dialog({ 
-			autoOpen: false, 
-			zIndex: 10000,
-			maxWidth: 700,
-			width: 'auto',
-			show: 300,
-			dialogClass: 'imgmap-dialog',
-			position: {
-				of: $(parent)
-				}
+	if(!imgmap.alt_dialog) {
+		if($().dialog) {
+			$('.imgmap-dialog-wrapper').dialog({ 
+				autoOpen: false, 
+				zIndex: 10000,
+				maxWidth: 700,
+				width: 'auto',
+				show: 300,
+				dialogClass: 'imgmap-dialog',
+				position: {
+					of: $(parent)
+					}
+				});
+			$('body').click(function(e) {
+				if(!$(e.target).is('.ui-dialog, a') && !$(e.target).closest('.ui-dialog').length)
+					$('.imgmap-dialog-wrapper').each(function(e) { $(this).dialog('close'); });
 			});
-		$('body').click(function(e) {
-			if(!$(e.target).is('.ui-dialog, a') && !$(e.target).closest('.ui-dialog').length)
-				$('.imgmap-dialog-wrapper').each(function(e) { $(this).dialog('close'); });
-		});
-	}
-	else {
-		if($('area[data-type="popup"]').length) {
-			
-			if(imgmap.admin_logged) {
-				var close = $('<a>');
-				close.text('Close').css( { cursor: 'pointer', float: 'right', fontSize: '0.9em' });
-				close.click(function() { $('.imgmap-dialog-wrapper').text(''); });
+		}
+		else {
+			if($('area[data-type="popup"]').length) {
 				
-				$('.imgmap-dialog-wrapper').
-				html("There was a problem loading jQuery UI Dialog widget. A plugin or a theme you're using might be including its own copy of jQuery library which causes conflict with the copy included in Wordpress. Because of this ImageMapper isn't able to use jQuery UI Dialog widget causing the popup window function incorrectly or not at all.<br />This message is shown only to an admin. This message is shown because some of the image map areas on this page are using the popup functionality and thus not working properly.").
-				css({ color: 'red', padding: '5px', fontSize: '0.8em' }).append(close);
+				if(imgmap.admin_logged) {
+					var close = $('<a>');
+					close.text('Close').css( { cursor: 'pointer', float: 'right', fontSize: '0.9em' });
+					close.click(function() { $('.imgmap-dialog-wrapper').text(''); });
+					
+					$('.imgmap-dialog-wrapper').
+					html("There was a problem loading jQuery UI Dialog widget. A plugin or a theme you're using might be including its own copy of jQuery library which causes conflict with the copy included in Wordpress. Because of this ImageMapper isn't able to use jQuery UI Dialog widget causing the popup window function incorrectly or not at all.<br />This message is shown only to an admin. This message is shown because some of the image map areas on this page are using the popup functionality and thus not working properly.").
+					css({ color: 'red', padding: '5px', fontSize: '0.8em' }).append(close);
+				}
 			}
 		}
 	}
@@ -173,13 +176,40 @@ function AreaClicked(data) {
 }
 
 function OpenImgmapDialog(key, parent) {
+	var image = jQuery('#' + parent.name.replace('imgmap', 'imagemap'));
 	var dialog = parent.name.replace('imgmap', '#imgmap-dialog');
-		jQuery(dialog).dialog('option', 'title', jQuery('area[data-mapkey='+key+']').attr('title'));
-		jQuery.post(imgmap.ajaxurl, { 
-			action: 'imgmap_load_dialog_post',
-			id: key.replace('area-', '')
-			}, function(response) {
-			jQuery(dialog).html(response).dialog('open');
-		});
+	
+	jQuery.post(imgmap.ajaxurl, { 
+		action: 'imgmap_load_dialog_post',
+		id: key.replace('area-', '')
+		}, function(response) {
+			if(response.length <= 0) return; 
+			if(!imgmap.alt_dialog) {
+					jQuery(dialog).dialog('option', 'title', jQuery('area[data-mapkey='+key+']').attr('title'));
+					jQuery(dialog).html(response).dialog('open');
+			} else {
+				
+				// Some ugly quick bug-fixing code
+				// Sometimes it's needed since everything does not always make sense. Or at least seem to do.
+				
+				// Resets the element
+				// Without this centering the element doesn't work well
+				jQuery(dialog).replaceWith('<div class="imgmap-dialog-wrapper" id="' + dialog.replace('#','') + '" style="visibility:hidden"></div>').hide(0);
+				
+				jQuery(dialog).addClass('imgmap-dialog-alt').html(response);
+				setTimeout(function() {
+					jQuery(dialog).position({ 
+						my: 'center',
+						at: 'center',
+						of: image
+					}).
+					hide().
+					css({visibility:'visible'}).
+					show(200);
+				}, 0);
+				
+				
+			}
+	});
 }
 

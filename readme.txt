@@ -3,7 +3,7 @@ Contributors: spikefinned
 Tags: image map, imagemap, images, interactive images
 Requires at least: 3.3.1
 Tested up to: 3.5.1
-Stable tag: 1.2.1
+Stable tag: 1.2.2
 License: GPLv2
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -38,6 +38,10 @@ How to insert image map to a post:
 1. Click the image map you want to insert into the post.
 
 == Changelog ==
+
+= 1.2.2 =
+* Bug fixes
+* Added new popup layout. Can be enabled/disabled from Imagemap Settings. Mainly an alternative option if the old layout doesn't work well.
 
 = 1.2.1 = 
 * Fluid width popup window. 
