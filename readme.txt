@@ -19,6 +19,8 @@ Based on the ImageMapster jQuery plugin. [ImageMapster homepage](http://www.outs
 
 The map of Finland in the banner image is provided by National Land Survey of Finland.
 
+Instructions for use are found in Installation page.
+
 == Installation ==
 
 1. Upload imagemapper folder to the `/wp-content/plugins/` directory
