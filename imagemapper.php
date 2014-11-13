@@ -3,7 +3,7 @@
 Plugin Name: ImageMapper
 Plugin URI: http://wordpress.org/support/plugin/imagemapper
 Description: Create interactive and visual image maps with a visual editor!
-Version: 1.2.2
+Version: 1.2.3
 Author: A.Sandberg AKA Spike, Tarmo Toikkanen <tarmo.toikkanen@iki.fi>
 Author URI: http://spike.viuhka.fi
 License: GPL2
@@ -120,7 +120,7 @@ function imgmap_create_post_type() {
 				'not_found' => __('Image map area not found'),
 				'not_found_in_trash' => __('Image map area not found in trash'),
 			),
-			'public' => true,
+			'public' => false,
 			'has_archive' => true,
 			'menu_icon' => plugins_url() . '/imagemapper/imagemap_area_icon.png',
 		)
@@ -759,19 +759,7 @@ function imgmap_create_area_element($id, $title) {
 	
 	$meta->title_attribute = isset($meta->title_attribute) ? $meta->title_attribute : '';
 	
-	return '
-	<area
-	data-type="'.esc_attr($meta->type).'"
-	data-tooltip="'.esc_attr($meta->type == 'tooltip' ? $meta->tooltip_text : false ). '"
-	data-fill-color="'.esc_attr(str_replace('#', '', $color['fillColor'])).'"
-	data-fill-opacity="'.esc_attr($color['fillOpacity']).'"
-	data-stroke-color="'.esc_attr(str_replace('#', '', $color['strokeColor'])).'"
-	data-stroke-opacity="'.esc_attr($color['strokeOpacity']).'"
-	data-stroke-width="'.esc_attr($color['strokeWidth']).'"
-	data-mapkey="area-'.$id.'" 
-	shape="poly" coords="'.esc_attr(get_post_meta($id, 'coords', true)).'" 
-	href="'.esc_attr($link) .'"
-	title="'.(isset($meta->title_attribute) ? $meta->title_attribute : $title).'" />';
+	return '<area data-type="'.esc_attr($meta->type).'" data-tooltip="'.esc_attr($meta->type == 'tooltip' ? $meta->tooltip_text : false ). '" data-fill-color="'.esc_attr(str_replace('#', '', $color['fillColor'])).'" data-fill-opacity="'.esc_attr($color['fillOpacity']).'" data-stroke-color="'.esc_attr(str_replace('#', '', $color['strokeColor'])).'" data-stroke-opacity="'.esc_attr($color['strokeOpacity']).'" data-stroke-width="'.esc_attr($color['strokeWidth']).'" data-mapkey="area-'.$id.'" shape="poly" coords="'.esc_attr(get_post_meta($id, 'coords', true)).'" href="'.esc_attr($link) .'" title="'.(isset($meta->title_attribute) ? $meta->title_attribute : $title).'" />';
 }
 
 /* Creates an list element to the list of imagemap's areas. */
