@@ -120,7 +120,7 @@ function imgmap_create_post_type() {
 				'not_found' => __('Image map area not found'),
 				'not_found_in_trash' => __('Image map area not found in trash'),
 			),
-			'public' => true,
+			'public' => false,
 			'has_archive' => true,
 			'menu_icon' => plugins_url() . '/imagemapper/imagemap_area_icon.png',
 		)
