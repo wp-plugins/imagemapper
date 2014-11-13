@@ -2,8 +2,8 @@
 Contributors: spikefinned, tatti
 Tags: image map, imagemap, images, interactive images
 Requires at least: 3.3.1
-Tested up to: 3.9
-Stable tag: 1.2.2
+Tested up to: 4.0
+Stable tag: 1.2.3
 License: GPLv2
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -20,6 +20,8 @@ Based on the ImageMapster jQuery plugin. [ImageMapster homepage](http://www.outs
 The map of Finland in the banner image is provided by National Land Survey of Finland.
 
 Instructions for use are found in Installation page.
+
+About support: This plugin was built during a project that has ended in 2013. Further development resources are very limited. If you need something fixed, most likely you'll need to fix it yourself. However, any patches are welcome and can be added to the main code base. If someone wants to become a co-author on this plugin, let us know.
 
 == Installation ==
 
@@ -40,6 +42,10 @@ How to insert image map to a post:
 1. Click the image map you want to insert into the post.
 
 == Changelog ==
+
+= 1.2.3 =
+* Imagemap areas no longer show up in search results.
+* Minor fixes to visual editor problems.
 
 = 1.2.2 =
 * Bug fixes
