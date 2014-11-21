@@ -3,8 +3,8 @@
 Plugin Name: ImageMapper
 Plugin URI: http://wordpress.org/support/plugin/imagemapper
 Description: Create interactive and visual image maps with a visual editor!
-Version: 1.2.2
-Author: A.Sandberg AKA Spike, Tarmo Toikkanen <tarmo.toikkanen@iki.fi>
+Version: 1.2.4
+Author: A.Sandberg AKA Spike, Tarmo Toikkanen <tarmo.toikkanen@iki.fi> with Samatva mods
 Author URI: http://spike.viuhka.fi
 License: GPL2
 */
@@ -34,7 +34,7 @@ add_action('manage_'.IMAGEMAP_AREA_POST_TYPE.'_posts_custom_column', 'imgmap_man
 add_action('media_upload_imagemap', 'imgmap_media_upload_tab_action');
 add_action('admin_action_imgmap_save_settings', 'imgmap_save_settings');
 
-add_filter('the_content', 'imgmap_replace_shortcode');
+// add_filter('the_content', 'imgmap_replace_shortcode');
 add_filter('post_updated_messages', 'imgmap_updated_message');
 add_filter('manage_edit-'.IMAGEMAP_POST_TYPE.'_columns', 'imgmap_set_imagemap_columns');
 add_filter('manage_edit-'.IMAGEMAP_AREA_POST_TYPE.'_columns', 'imgmap_set_imagemap_area_columns');
@@ -384,7 +384,13 @@ function imgmap_frontend_image($id, $element_id) {
 	echo get_imgmap_frontend_image($id, $element_id);
 }
 	
-function get_imgmap_frontend_image($id, $element_id) {
+function get_imgmap_frontend_image( $atts ) {   /// $id, $element_id) {  /// changed passed-in vars
+								// mods by Samatva@yahoo.com
+	global $element_id_count;  // prevent duplicate maps
+	$element_id_count++;		// start with 1
+	$id = $atts['id'];			// get the map id from the passed-in attributes
+	$element_id = $id . '-' . $element_id_count;	// build the unique identifier
+													// carry on with the original processing
 	$areas = array();
 	$value = '
 	<div class="imgmap-frontend-image">
@@ -424,6 +430,8 @@ function get_imgmap_frontend_image($id, $element_id) {
 	</div>';
 	return $value;
 }
+add_shortcode( 'imagemap', 'get_imgmap_frontend_image' );
+
 
 /* Fields for adding new areas to the imagemap using the editor.
  * However the editor functionality is included in the image field. */
@@ -759,19 +767,7 @@ function imgmap_create_area_element($id, $title) {
 	
 	$meta->title_attribute = isset($meta->title_attribute) ? $meta->title_attribute : '';
 	
-	return '
-	<area
-	data-type="'.esc_attr($meta->type).'"
-	data-tooltip="'.esc_attr($meta->type == 'tooltip' ? $meta->tooltip_text : false ). '"
-	data-fill-color="'.esc_attr(str_replace('#', '', $color['fillColor'])).'"
-	data-fill-opacity="'.esc_attr($color['fillOpacity']).'"
-	data-stroke-color="'.esc_attr(str_replace('#', '', $color['strokeColor'])).'"
-	data-stroke-opacity="'.esc_attr($color['strokeOpacity']).'"
-	data-stroke-width="'.esc_attr($color['strokeWidth']).'"
-	data-mapkey="area-'.$id.'" 
-	shape="poly" coords="'.esc_attr(get_post_meta($id, 'coords', true)).'" 
-	href="'.esc_attr($link) .'"
-	title="'.(isset($meta->title_attribute) ? $meta->title_attribute : $title).'" />';
+	return '<area data-type="'.esc_attr($meta->type).'" data-tooltip="'.esc_attr($meta->type == 'tooltip' ? $meta->tooltip_text : false ). '" data-fill-color="'.esc_attr(str_replace('#', '', $color['fillColor'])).'" data-fill-opacity="'.esc_attr($color['fillOpacity']).'" data-stroke-color="'.esc_attr(str_replace('#', '', $color['strokeColor'])).'" data-stroke-opacity="'.esc_attr($color['strokeOpacity']).'" data-stroke-width="'.esc_attr($color['strokeWidth']).'" data-mapkey="area-'.$id.'" shape="poly" coords="'.esc_attr(get_post_meta($id, 'coords', true)).'" href="'.esc_attr($link) .'" title="'.(isset($meta->title_attribute) ? $meta->title_attribute : $title).'" />';
 }
 
 /* Creates an list element to the list of imagemap's areas. */
@@ -876,6 +872,7 @@ function imgmap_delete_imagemap($post_id, $permanent) {
 }
 
 /* Insert image map code in posts */
+/* removed by Samatva - the *wrong* way to do shortcodes - breaks with "curly" quotation marks
 function imgmap_replace_shortcode($content) {
 	global $imagemaps;
 	preg_match_all('/\[imagemap id=\"(.*?)\"\]/', $content, $maps);
@@ -888,7 +885,7 @@ function imgmap_replace_shortcode($content) {
 	}
 	return $content;
 }
-
+*/
 function imgmap_save_area_title() {
 	if(current_user_can('manage_options')) {
 		$id = $_POST['id'];
