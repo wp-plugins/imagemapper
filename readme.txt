@@ -3,7 +3,7 @@ Contributors: spikefinned, tatti
 Tags: image map, imagemap, images, interactive images
 Requires at least: 3.3.1
 Tested up to: 4.1
-Stable tag: 1.2.4
+Stable tag: 1.2.5
 License: GPLv2
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -42,6 +42,9 @@ How to insert image map to a post:
 1. Click the image map you want to insert into the post.
 
 == Changelog ==
+
+= 1.2.5 =
+* Fixed CSS so imagemaps work on responsive sites. Kudos to Pourgt!
 
 = 1.2.4 =
 * Fixed to work with Wordpress 4.0.1. Kudos to Samatva!
