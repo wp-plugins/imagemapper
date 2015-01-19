@@ -3,7 +3,7 @@
 Plugin Name: ImageMapper
 Plugin URI: http://wordpress.org/support/plugin/imagemapper
 Description: Create interactive and visual image maps with a visual editor!
-Version: 1.2.4
+Version: 1.2.5
 Author: A.Sandberg AKA Spike, Tarmo Toikkanen <tarmo.toikkanen@iki.fi> with Samatva mods
 Author URI: http://spike.viuhka.fi
 License: GPL2
