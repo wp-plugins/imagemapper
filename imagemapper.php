@@ -3,8 +3,8 @@
 Plugin Name: ImageMapper
 Plugin URI: http://wordpress.org/support/plugin/imagemapper
 Description: Create interactive and visual image maps with a visual editor!
-Version: 1.2.5
-Author: A.Sandberg AKA Spike, Tarmo Toikkanen <tarmo.toikkanen@iki.fi> with Samatva mods
+Version: 1.2.6
+Author: A.Sandberg AKA Spike, Tarmo Toikkanen <tarmo.toikkanen@iki.fi>
 Author URI: http://spike.viuhka.fi
 License: GPL2
 */
@@ -381,15 +381,20 @@ function media_imgmap_media_upload_tab_inside() {
 
 /* Displays the image map in a frontend page. */
 function imgmap_frontend_image($id, $element_id) {
-	echo get_imgmap_frontend_image($id, $element_id);
+	$atts = array(
+		'id' => $id,
+		'element_id' => $element_id);
+	return imgmap_frontend_image_shortcode($atts);
 }
-	
-function get_imgmap_frontend_image( $atts ) {   /// $id, $element_id) {  /// changed passed-in vars
-								// mods by Samatva@yahoo.com
+
+function imgmap_frontend_image_shortcode( $atts ) {
 	global $element_id_count;  // prevent duplicate maps
 	$element_id_count++;		// start with 1
 	$id = $atts['id'];			// get the map id from the passed-in attributes
-	$element_id = $id . '-' . $element_id_count;	// build the unique identifier
+	if (isset($atts['element_id']))
+		$element_id = $atts['element_id'];
+	else
+		$element_id = $id . '-' . $element_id_count;    // build the unique identifier
 													// carry on with the original processing
 	$areas = array();
 	$value = '
@@ -430,7 +435,7 @@ function get_imgmap_frontend_image( $atts ) {   /// $id, $element_id) {  /// cha
 	</div>';
 	return $value;
 }
-add_shortcode( 'imagemap', 'get_imgmap_frontend_image' );
+add_shortcode( 'imagemap', 'imgmap_frontend_image_shortcode' );
 
 
 /* Fields for adding new areas to the imagemap using the editor.
