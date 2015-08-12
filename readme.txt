@@ -2,7 +2,7 @@
 Contributors: spikefinned, tatti
 Tags: image map, imagemap, images, interactive images
 Requires at least: 3.3.1
-Tested up to: 4.1
+Tested up to: 4.3
 Stable tag: 1.2.6
 License: GPLv2
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
